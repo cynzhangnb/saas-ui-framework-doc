@@ -21,9 +21,25 @@ export function AI() {
             </ul>
 
             {/* FigJam reference */}
-            <div className="flex items-center gap-2 mb-0">
-              <span className="text-sm text-gray-700">Research of existing AI-first products</span>
-              <span className="text-xs text-gray-400 border border-dashed border-gray-300 rounded px-2 py-0.5">FigJam link to be inserted</span>
+            <div className="mb-0">
+              <p className="text-sm text-[#364153] mb-3">Research of existing AI-first products</p>
+              <div className="text-sm">
+                <a
+                  href="https://www.figma.com/board/jshmvKmMAPp47R0lqJs8YV/SaaS-Main-UI-Framework?node-id=89-1428"
+                  className="inline-flex items-center gap-3 px-4 py-3 bg-white border border-gray-200 rounded-lg hover:border-blue-400 hover:shadow-sm transition-all group"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <svg width="24" height="24" viewBox="0 0 14 14" fill="none" className="flex-shrink-0">
+                    <path d="M3.5 14C4.88071 14 6 12.8807 6 11.5V9H3.5C2.11929 9 1 10.1193 1 11.5C1 12.8807 2.11929 14 3.5 14Z" fill="#0ACF83"/>
+                    <path d="M1 7C1 5.61929 2.11929 4.5 3.5 4.5H6V9.5H3.5C2.11929 9.5 1 8.38071 1 7Z" fill="#A259FF"/>
+                    <path d="M1 2.5C1 1.11929 2.11929 0 3.5 0H6V5H3.5C2.11929 5 1 3.88071 1 2.5Z" fill="#F24E1E"/>
+                    <path d="M6 0H8.5C9.88071 0 11 1.11929 11 2.5C11 3.88071 9.88071 5 8.5 5H6V0Z" fill="#FF7262"/>
+                    <path d="M11 7C11 8.38071 9.88071 9.5 8.5 9.5C7.11929 9.5 6 8.38071 6 7C6 5.61929 7.11929 4.5 8.5 4.5C9.88071 4.5 11 5.61929 11 7Z" fill="#1ABCFE"/>
+                  </svg>
+                  <span className="text-gray-900 group-hover:text-blue-600">FigJam – AI Interaction Model Research</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
