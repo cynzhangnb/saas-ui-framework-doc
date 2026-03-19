@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ACME NetOps — AI Workspace</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;display:flex;align-items:stretch;justify-content:stretch;height:100vh;overflow:hidden;}
+
+.shell{width:100%;height:100%;border:none;border-radius:0;overflow:hidden;display:flex;flex-direction:column;background:#fff;box-shadow:none;}
+
+/* —— Header —— */
+.g-hdr{height:44px;background:#fff;border-bottom:1px solid #e0e0e0;display:flex;align-items:center;flex-shrink:0;z-index:30;}
+.hbg{width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#888;flex-shrink:0;}
+.hbg:hover{background:#f5f5f5;}
+.hsep{width:1px;height:20px;background:#ebebeb;flex-shrink:0;align-self:center;}
+.hlogo{display:flex;align-items:center;gap:7px;padding:0 14px 0 10px;flex-shrink:0;}
+.hndot{width:18px;height:18px;border-radius:4px;background:#378ADD;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;}
+.hprod{font-size:13px;font-weight:600;color:#111;display:flex;align-items:center;gap:4px;cursor:pointer;padding:2px 5px;border-radius:4px;}
+.hprod:hover{background:#f0f0f0;}
+.hsrch{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:5px;cursor:pointer;color:#999;flex-shrink:0;margin-left:6px;}
+.hsrch:hover{background:#f5f5f5;color:#444;}
+.hfill{flex:1;}
+.hright{display:flex;align-items:center;gap:4px;padding:0 12px;}
+.hico{width:30px;height:30px;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#888;}
+.hico:hover{background:#f0f0f0;color:#333;}
+.htenant{display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid #e4e4e4;border-radius:5px;font-size:12px;color:#444;background:#fafafa;cursor:default;white-space:nowrap;}
+
+/* —— Body —— */
+.body{display:flex;flex:1;overflow:hidden;}
+
+/* —— Sidebar —— */
+.sidebar{width:44px;background:#fafafa;border-right:1px solid #ebebeb;display:flex;flex-direction:column;flex-shrink:0;}
+.sbnav{flex:1;padding:8px 0;}
+.sbi-wrap{width:44px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;flex-shrink:0;}
+.sbi-wrap:hover{background:rgba(0,0,0,0.04);}
+.sbi{width:18px;height:18px;border-radius:4px;background:#d0d0d0;flex-shrink:0;}
+.sbi-wrap.ai-on .sbi{background:#378ADD;display:flex;align-items:center;justify-content:center;}
+.sbi-tt{position:absolute;left:46px;background:#1a1a1a;color:#fff;font-size:11px;padding:3px 8px;border-radius:4px;white-space:nowrap;pointer-events:none;opacity:0;z-index:400;top:50%;transform:translateY(-50%);}
+.sbi-tt::before{content:'';position:absolute;left:-4px;top:50%;transform:translateY(-50%);border:4px solid transparent;border-right-color:#1a1a1a;border-left:none;}
+.sbi-wrap:hover .sbi-tt{opacity:1;}
+.sbdiv{height:1px;background:#ebebeb;margin:4px 8px;}
+.sbbottom{padding:6px 0;border-top:1px solid #ebebeb;}
+
+/* —— Main —— */
+.main{flex:1;display:flex;overflow:hidden;min-width:0;}
+
+/* —— Chat pane —— */
+.cpane{display:flex;flex-direction:column;background:#fff;overflow:hidden;flex:1;min-width:280px;transition:flex 0.3s cubic-bezier(0.4,0,0.2,1);}
+.cpane.full{flex:1;}
+
+/* —— Empty state —— */
+.estate{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 40px 32px;gap:0;}
+.estate-graphic{width:64px;height:64px;border-radius:16px;background:#f0f6ff;border:1px solid #d8eaff;display:flex;align-items:center;justify-content:center;margin-bottom:20px;flex-shrink:0;}
+.estate-title{font-size:20px;font-weight:600;color:#111;margin-bottom:8px;letter-spacing:-0.02em;}
+.estate-sub{font-size:13px;color:#999;margin-bottom:28px;}
+
+/* Shared AI input box style */
+.ai-box{width:100%;max-width:500px;border:1.5px solid #378ADD;border-radius:10px;background:#fff;overflow:hidden;box-shadow:0 2px 12px rgba(55,138,221,0.08);}
+.ai-box-input{width:100%;padding:14px 16px 10px;border:none;outline:none;font-size:13px;color:#222;resize:none;font-family:inherit;background:transparent;min-height:52px;}
+.ai-box-input::placeholder{color:#bbb;}
+.ai-box-footer{display:flex;align-items:center;padding:8px 12px;}
+.ai-send{width:28px;height:28px;border-radius:6px;border:1px solid #d8d8d8;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:auto;color:#888;flex-shrink:0;}
+.ai-send:hover{background:#f5f5f5;border-color:#bbb;color:#333;}
+
+.shortcuts{display:flex;gap:8px;flex-wrap:nowrap;max-width:500px;justify-content:center;}
+.sc-pill{padding:7px 15px;border:1px solid #e0e0e0;border-radius:20px;font-size:12px;color:#555;cursor:pointer;background:#fff;white-space:nowrap;transition:border-color 0.12s,background 0.12s,color 0.12s;flex-shrink:0;}
+.sc-pill:hover{border-color:#378ADD;background:#f0f6ff;color:#1a6bc4;}
+
+/* —— Chat messages —— */
+.cmsgs{flex:1;overflow-y:auto;padding:24px 0 16px;display:flex;flex-direction:column;gap:16px;}
+.cmsgs::-webkit-scrollbar{width:3px;}
+.cmsgs::-webkit-scrollbar-thumb{background:#e8e8e8;border-radius:3px;}
+.cmsg-user{max-width:680px;width:100%;margin:0 auto;padding:0 24px;display:flex;justify-content:flex-end;}
+.ububble{background:#f5f5f5;border:1px solid #e8e8e8;border-radius:8px 8px 2px 8px;padding:8px 13px;font-size:13px;color:#222;max-width:72%;}
+.cmsg-ai{max-width:680px;width:100%;margin:0 auto;padding:0 24px;}
+.arow{display:flex;flex-direction:column;gap:6px;max-width:100%;}
+.arow{animation:fadeInMsg 0.4s ease both;}
+@keyframes fadeInMsg{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.atext{font-size:13px;color:#333;line-height:1.7;}
+.atext strong{font-weight:600;color:#111;}
+.atext ul{padding-left:16px;margin:4px 0 2px;}
+.atext li{margin:2px 0;font-size:12px;color:#555;}
+
+/* Artifact tile */
+.atile{display:inline-flex;flex-direction:column;gap:8px;border:1px solid #e4e4e4;border-radius:8px;padding:11px 14px;margin-top:4px;background:#fff;min-width:180px;max-width:300px;}
+.atile-hdr{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;color:#333;}
+.atile-ico{color:#aaa;flex-shrink:0;}
+.atile-btn{display:inline-flex;align-items:center;padding:5px 12px;border:1px solid #d0d0d0;border-radius:5px;font-size:11px;font-weight:500;color:#111;cursor:pointer;background:#fff;width:fit-content;}
+.atile-btn:hover{background:#f5f5f5;border-color:#bbb;}
+.atile-btn.canvas{border-color:#378ADD;color:#378ADD;}
+.atile-btn.canvas:hover{background:#f0f6ff;}
+
+/* Chart in tile */
+.chart-mini{display:flex;align-items:flex-end;gap:2px;height:44px;padding:0 2px;margin-bottom:2px;}
+.cb{flex:1;border-radius:2px 2px 0 0;}
+
+/* —— Chat input bar —— */
+.cinput-bar{padding:16px 24px;border-top:1px solid #f0f0f0;flex-shrink:0;display:flex;justify-content:center;}
+.cinput-inner{width:100%;max-width:680px;}
+.cinput-box{border:1.5px solid #378ADD;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 2px 12px rgba(55,138,221,0.08);}
+.cinput-main{width:100%;padding:14px 16px 10px;border:none;outline:none;font-size:13px;color:#222;font-family:inherit;resize:none;background:transparent;min-height:52px;}
+.cinput-main::placeholder{color:#bbb;}
+.cinput-ftr{display:flex;align-items:center;padding:8px 12px;}
+.csend{width:28px;height:28px;border-radius:6px;border:1px solid #d8d8d8;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:auto;color:#888;}
+.csend:hover{background:#f5f5f5;border-color:#bbb;color:#333;}
+
+/* —— Resize handle —— */
+.resize-handle{width:0;background:transparent;cursor:col-resize;flex-shrink:0;position:relative;z-index:10;overflow:visible;
+  transition:width 0.3s cubic-bezier(0.4,0,0.2,1);}
+.resize-handle.open{width:4px;}
+.resize-handle.open:hover{background:#e0e0e0;}
+.resize-handle::after{content:'';position:absolute;top:0;bottom:0;left:1px;width:1px;background:#e4e4e4;opacity:0;transition:opacity 0.3s;}
+.resize-handle.open::after{opacity:1;}
+
+/* —— Right panel —— */
+.rpanel{background:#f8f8f8;display:flex;flex-direction:column;overflow:hidden;
+  flex:0 0 0%;transition:flex-basis 0.3s cubic-bezier(0.4,0,0.2,1);}
+.rpanel.open{flex-basis:50%;}
+.rhdr{height:44px;background:#fff;border-bottom:1px solid #e8e8e8;display:flex;align-items:center;padding:0 16px;gap:8px;flex-shrink:0;}
+.rtitle{font-size:13px;font-weight:500;color:#333;flex:1;}
+.rcls{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#bbb;font-size:13px;line-height:1;}
+.rcls:hover{background:#f0f0f0;color:#555;}
+.rshare{padding:4px 12px;border:1px solid #d0d0d0;border-radius:5px;font-size:12px;font-weight:500;color:#333;cursor:pointer;background:#fff;}
+.rshare:hover{background:#f5f5f5;}
+
+/* Map view */
+.mapview{flex:1;overflow:hidden;position:relative;}
+.mapbg{position:absolute;inset:0;background-image:radial-gradient(circle,#ddd 1px,transparent 1px);background-size:22px 22px;background-color:#f8f8f8;}
+.netgraph-wrap{position:absolute;inset:0;overflow:hidden;}
+#edgesvg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;}
+
+.ng-node{position:absolute;border:1px solid #ccc;border-radius:7px;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:9px 12px;white-space:nowrap;font-size:10px;color:#333;cursor:default;transform:translate(-50%,-50%);}
+.ng-node:hover{border-color:#378ADD;box-shadow:0 2px 8px rgba(55,138,221,0.12);}
+.ng-lbl{font-size:10px;font-weight:500;color:#333;}
+.ng-ip{font-size:9px;color:#999;}
+
+/* Canvas view */
+.canvasbody{flex:1;overflow:auto;padding:16px;}
+.cgrid{display:grid;grid-template-columns:1fr;gap:12px;}
+.ccard{background:#fff;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;}
+.ccard-hdr{padding:8px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:6px;}
+.ccard-title{font-size:11px;font-weight:500;color:#444;flex:1;}
+.ccard-x{cursor:pointer;color:#ccc;font-size:12px;line-height:1;}
+.ccard-x:hover{color:#888;}
+.ccard-body{padding:12px;}
+.cmap-mini{height:80px;background:#f5f5f5;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#bbb;}
+.cchart{height:64px;display:flex;align-items:flex-end;gap:2px;}
+.ccbar{flex:1;border-radius:2px 2px 0 0;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- —— Header —— -->
+  <div class="g-hdr">
+    <div class="hbg">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="3" width="10" height="1.4" rx="0.4" fill="currentColor"/><rect x="2" y="6.3" width="10" height="1.4" rx="0.4" fill="currentColor"/><rect x="2" y="9.6" width="10" height="1.4" rx="0.4" fill="currentColor"/></svg>
+    </div>
+    <div class="hsep"></div>
+    <div class="hlogo">
+      <div class="hndot">N</div>
+      <div class="hprod">ACME NetOps <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+    </div>
+    <div class="hsep"></div>
+    <div class="hsrch" title="Search">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.2" stroke="currentColor" stroke-width="1.3"/><line x1="9.2" y1="9.2" x2="13" y2="13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+    </div>
+    <div class="hfill"></div>
+    <div class="hright">
+      <div class="hico" title="Notifications">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5a4.5 4.5 0 0 1 4.5 4.5v2.5l1 1.5H1.5L2.5 8.5V6A4.5 4.5 0 0 1 7 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M5.5 12a1.5 1.5 0 0 0 3 0" stroke="currentColor" stroke-width="1.2"/></svg>
+      </div>
+      <div class="hico" title="Help">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 5.2a2 2 0 0 1 3.9.7c0 1.2-1.9 1.7-1.9 2.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="10.2" r="0.6" fill="currentColor"/></svg>
+      </div>
+      <div class="hsep" style="margin:0 4px;"></div>
+      <div class="htenant">Tenant XYZ <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="color:#aaa"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+    </div>
+  </div>
+
+  <!-- —— Body —— -->
+  <div class="body">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sbnav">
+        <div class="sbi-wrap"><div class="sbi"></div><div class="sbi-tt">Network Visibility</div></div>
+        <div class="sbi-wrap"><div class="sbi"></div><div class="sbi-tt">Automation</div></div>
+        <div class="sbi-wrap ai-on" onclick="resetDemo()" title="AI Workspace">
+          <div class="sbi">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1L5.9 4.1L9 5L5.9 5.9L5 9L4.1 5.9L1 5L4.1 4.1L5 1Z" fill="white"/></svg>
+          </div>
+          <div class="sbi-tt">AI Workspace (click to reset)</div>
+        </div>
+        <div class="sbdiv"></div>
+        <div class="sbi-wrap"><div class="sbi"></div><div class="sbi-tt">Data &amp; Discovery</div></div>
+        <div class="sbi-wrap"><div class="sbi"></div><div class="sbi-tt">Inventory</div></div>
+        <div class="sbi-wrap"><div class="sbi"></div><div class="sbi-tt">Alerts</div></div>
+        <div class="sbi-wrap"><div class="sbi"></div><div class="sbi-tt">Assessment</div></div>
+      </div>
+      <div class="sbbottom">
+        <div class="sbi-wrap">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="color:#b8b8b8"><circle cx="7" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 12c0-2.8 2.5-4.5 5.5-4.5s5.5 1.7 5.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          <div class="sbi-tt">User</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main" id="main-area">
+
+      <!-- Chat pane -->
+      <div class="cpane full" id="cpane">
+
+        <!-- EMPTY STATE -->
+        <div class="estate" id="estate">
+          <div class="estate-graphic">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <path d="M16 4L18.4 12.6L27 15L18.4 17.4L16 26L13.6 17.4L5 15L13.6 12.6L16 4Z" stroke="#378ADD" stroke-width="1.6" stroke-linejoin="round" fill="#d8eaff"/>
+              <path d="M24 3L24.8 5.2L27 6L24.8 6.8L24 9L23.2 6.8L21 6L23.2 5.2L24 3Z" stroke="#378ADD" stroke-width="1.2" stroke-linejoin="round" fill="#b8d8ff"/>
+            </svg>
+          </div>
+          <div class="estate-title">AI Workspace</div>
+          <div class="estate-sub">Ask, explore, and troubleshoot your network.</div>
+          <div class="ai-box">
+            <textarea class="ai-box-input" placeholder="Do anything with AI..." id="main-input" rows="2" onkeydown="handleMainEnter(event)"></textarea>
+            <div class="ai-box-footer">
+              <div class="ai-send" onclick="runStep1()">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 6L2 2V5.5L8 6L2 6.5V10Z" fill="currentColor"/></svg>
+              </div>
+            </div>
+          </div>
+          <div style="height:16px;"></div>
+          <div class="shortcuts">
+            <div class="sc-pill" onclick="runStep1()">Explore Network</div>
+            <div class="sc-pill">Create intent</div>
+            <div class="sc-pill">Discover devices</div>
+            <div class="sc-pill">Troubleshoot issue</div>
+          </div>
+        </div>
+
+        <!-- CHAT MESSAGES -->
+        <div class="cmsgs" id="cmsgs" style="display:none;"></div>
+
+        <!-- CHAT INPUT -->
+        <div class="cinput-bar" id="cinput-bar" style="display:none;">
+          <div class="cinput-inner">
+            <div class="cinput-box">
+              <textarea class="cinput-main" placeholder="Ask anything about your network, or specify a task..." id="cinput" rows="2" onkeydown="handleChatEnter(event)"></textarea>
+              <div class="cinput-ftr">
+                <div class="csend" onclick="sendChat()">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 6L2 2V5.5L8 6L2 6.5V10Z" fill="currentColor"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /cpane -->
+
+      <!-- Resize handle -->
+      <div class="resize-handle" id="resize-handle" style="display:none;" onmousedown="startResize(event)"></div>
+
+      <!-- Right panel -->
+      <div class="rpanel" id="rpanel" style="display:none;">
+
+        <!-- Map view -->
+        <div id="rmap" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+          <div class="rhdr">
+            <span class="rtitle">Boston data center map</span>
+            <div class="rshare">Share</div>
+            <div style="width:8px;"></div>
+            <div class="rcls" onclick="closeRight()">×</div>
+          </div>
+          <div class="mapview" id="mapview">
+            <div class="mapbg"></div>
+            <div class="netgraph-wrap" id="netgraph-wrap">
+              <svg id="edgesvg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;"></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas view -->
+        <div id="rcanvas" style="display:none;flex-direction:column;flex:1;overflow:hidden;">
+          <div class="rhdr">
+            <span class="rtitle">AI Canvas</span>
+            <div class="rshare">Share</div>
+          </div>
+          <div class="canvasbody">
+            <div class="cgrid" id="cgrid"></div>
+          </div>
+        </div>
+
+      </div><!-- /rpanel -->
+
+    </div><!-- /main -->
+  </div><!-- /body -->
+</div><!-- /shell -->
+
+<script>
+let step=0;
+const e=id=>document.getElementById(id);
+
+const NODES=[
+  {id:'cr1',label:'Core Router 1', ip:'10.0.0.1', px:33, py:14},
+  {id:'cr2',label:'Core Router 2', ip:'10.0.0.2', px:62, py:14},
+  {id:'ds1',label:'Dist Switch 1', ip:'10.1.1.1', px:9,  py:47},
+  {id:'ds2',label:'Dist Switch 2', ip:'10.1.2.1', px:23, py:47},
+  {id:'ds3',label:'Dist Switch 3', ip:'10.1.3.1', px:37, py:47},
+  {id:'ds4',label:'Dist Switch 4', ip:'10.1.4.1', px:51, py:47},
+  {id:'ds5',label:'Dist Switch 5', ip:'10.1.5.1', px:65, py:47},
+  {id:'ds6',label:'Dist Switch 6', ip:'10.1.6.1', px:82, py:47},
+  {id:'es1',label:'End System 1', ip:'10.2.1.1', px:22, py:80},
+  {id:'es2',label:'End System 2', ip:'10.2.2.1', px:48, py:80},
+  {id:'es3',label:'End System 3', ip:'10.2.3.1', px:74, py:80},
+];
+const EDGES=[
+  ['cr1','ds1'],['cr1','ds2'],['cr1','ds3'],['cr1','ds4'],
+  ['cr2','ds3'],['cr2','ds4'],['cr2','ds5'],['cr2','ds6'],
+  ['ds1','es1'],['ds2','es1'],['ds3','es2'],['ds4','es2'],['ds5','es3'],['ds6','es3'],
+];
+
+function routerSvg(){
+  return `<svg width="16" height="12" viewBox="0 0 16 12" fill="none" style="color:#aaa"><rect x="1" y="2" width="14" height="7" rx="2" stroke="currentColor" stroke-width="1.2"/><circle cx="4" cy="5.5" r="1" fill="currentColor" opacity="0.5"/><circle cx="7" cy="5.5" r="1" fill="currentColor" opacity="0.5"/><line x1="10" y1="5.5" x2="14" y2="5.5" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.5"/></svg>`;
+}
+function switchSvg(){
+  return `<svg width="16" height="10" viewBox="0 0 16 10" fill="none" style="color:#aaa"><rect x="1" y="1" width="14" height="8" rx="2" stroke="currentColor" stroke-width="1.2"/><line x1="4.5" y1="3" x2="4.5" y2="7" stroke="currentColor" stroke-width="1" opacity="0.5"/><line x1="7.5" y1="3" x2="7.5" y2="7" stroke="currentColor" stroke-width="1" opacity="0.5"/><line x1="10.5" y1="3" x2="10.5" y2="7" stroke="currentColor" stroke-width="1" opacity="0.5"/></svg>`;
+}
+
+function buildNetGraph(){
+  const wrap=e('netgraph-wrap');
+  wrap.querySelectorAll('.ng-node').forEach(n=>n.remove());
+  e('edgesvg').innerHTML='';
+
+  NODES.forEach(n=>{
+    const div=document.createElement('div');
+    div.className='ng-node';
+    div.id='nd-'+n.id;
+    div.style.left=n.px+'%';
+    div.style.top=n.py+'%';
+    const isRouter=n.id.startsWith('cr');
+    div.innerHTML=`${isRouter?routerSvg():switchSvg()}<span class="ng-lbl">${n.label}</span><span class="ng-ip">${n.ip}</span>`;
+    wrap.appendChild(div);
+  });
+
+  setTimeout(()=>{
+    const svg=e('edgesvg');
+    const wrBounds=wrap.getBoundingClientRect();
+    EDGES.forEach(([a,b])=>{
+      const na=e('nd-'+a), nb=e('nd-'+b);
+      if(!na||!nb)return;
+      const ra=na.getBoundingClientRect(), rb=nb.getBoundingClientRect();
+      const x1=(ra.left+ra.right)/2 - wrBounds.left;
+      const y1=(ra.top+ra.bottom)/2 - wrBounds.top;
+      const x2=(rb.left+rb.right)/2 - wrBounds.left;
+      const y2=(rb.top+rb.bottom)/2 - wrBounds.top;
+      const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x1); line.setAttribute('y1',y1);
+      line.setAttribute('x2',x2); line.setAttribute('y2',y2);
+      line.setAttribute('stroke','#ccc');
+      line.setAttribute('stroke-width','1');
+      svg.appendChild(line);
+    });
+  },80);
+}
+
+const BARS=[28,34,38,42,46,50,54,58,62,68,76,88];
+
+function showChatMode(){
+  e('estate').style.display='none';
+  e('cmsgs').style.display='flex';
+  e('cinput-bar').style.display='flex';
+}
+
+function openRight(mode){
+  const rp=e('rpanel'), cp=e('cpane'), rh=e('resize-handle');
+  e('rmap').style.display='none';
+  e('rcanvas').style.display='none';
+  rp.style.display='flex';
+  rh.style.display='block';
+  cp.classList.remove('full');
+  cp.style.width=''; cp.style.flex='';
+  rp.style.width=''; rp.style.flex='';
+  if(mode==='map'){e('rmap').style.display='flex'; buildNetGraph();}
+  else if(mode==='canvas'){e('rcanvas').style.display='flex'; buildCanvas();}
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
+    rp.classList.add('open');
+    rh.classList.add('open');
+  });});
+}
+
+function closeRight(){
+  const rp=e('rpanel'), cp=e('cpane'), rh=e('resize-handle');
+  rp.classList.remove('open');
+  rh.classList.remove('open');
+  cp.style.width=''; cp.style.flex='';
+  rp.style.width=''; rp.style.flex='';
+  setTimeout(()=>{
+    rp.style.display='none';
+    rh.style.display='none';
+    cp.classList.add('full');
+  }, 320);
+}
+
+function addMsg(html, type='ai'){
+  const m=e('cmsgs');
+  const wrap=document.createElement('div');
+  wrap.className = type==='user' ? 'cmsg-user' : 'cmsg-ai';
+  wrap.innerHTML=html;
+  m.appendChild(wrap);
+  m.scrollTop=m.scrollHeight;
+}
+
+function delay(fn,ms){return new Promise(r=>setTimeout(()=>{fn();r();},ms));}
+
+async function runStep1(){
+  if(step>0)return;
+  step=1;
+  showChatMode();
+  addMsg(`<div class="ububble">Show me Boston data center</div>`,'user');
+  await delay(()=>{
+    addMsg(`
+      <div class="arow">
+        <div class="atext">
+          <strong>Boston DC context established.</strong>
+          <ul>
+            <li>127 active devices</li>
+            <li>3 network tiers</li>
+            <li>18 segments | 42 VLANs</li>
+          </ul>
+          <strong>Structure</strong>
+          <ul>
+            <li>Core → Distribution → Access hierarchy</li>
+            <li>2 core routers</li>
+            <li>6 distribution switches</li>
+            <li>45 access switches</li>
+          </ul>
+        </div>
+        <div class="atile">
+          <div class="atile-hdr">
+            <span class="atile-ico"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.1"/><path d="M3.5 7.5L5 5.5L7 7L9 4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            Boston Data Center Map
+          </div>
+          <div class="atile-btn" onclick="openRight('map')">View Map</div>
+        </div>
+      </div>`);
+    const ci = e('cinput');
+    if(ci) ci.value = 'Show me the recent traffic trend for the uplink interfaces on the core switch';
+  },600);
+}
+
+async function runStep2(){
+  step=2;
+  addMsg(`<div class="ububble">Show me the recent traffic trend for the uplink interfaces on the core switch</div>`,'user');
+  await delay(()=>{
+    const bars=BARS.map((h,i)=>`<div class="cb" style="height:${h}%;background:${i>=10?'#378ADD':'#c0d8f0'};flex:1;"></div>`).join('');
+    addMsg(`
+      <div class="arow">
+        <div class="atext">The core switch uplink interfaces show <strong>steady increasing traffic</strong> over the past 12 days, trending from <strong>18 Mbps to 50 Mbps</strong>.</div>
+        <div class="atile">
+          <div class="atile-hdr">
+            <span class="atile-ico"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="1,9 4,5 7,7 10,2" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></span>
+            Core Switch Uplink Traffic Trend
+          </div>
+          <div class="chart-mini">${bars}</div>
+          <div class="atile-btn canvas">+ Add to canvas</div>
+        </div>
+      </div>`);
+    e('cmsgs').scrollTop=e('cmsgs').scrollHeight;
+  },600);
+}
+
+function buildCanvas(){
+  const bars=BARS.map((h,i)=>`<div class="ccbar" style="height:${h}%;background:${i>=10?'#378ADD':'#c0d8f0'};flex:1;"></div>`).join('');
+  e('cgrid').innerHTML=`
+    <div class="ccard">
+      <div class="ccard-hdr"><span class="ccard-title">Boston DC Context Map</span><div class="ccard-x">×</div></div>
+      <div class="ccard-body"><div class="cmap-mini">Network map preview</div></div>
+    </div>
+    <div class="ccard">
+      <div class="ccard-hdr"><span class="ccard-title">Core Switch Uplink Interface Traffic Trend</span><div class="ccard-x">×</div></div>
+      <div class="ccard-body"><div class="cchart">${bars}</div></div>
+    </div>`;
+}
+
+function handleMainEnter(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();runStep1();}}
+function handleChatEnter(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();sendChat();}}
+function sendChat(){
+  const inp=e('cinput');const v=inp.value.trim();
+  if(!v)return;
+  inp.value='';
+  if(step===1)runStep2();
+  else{
+    addMsg(`<div class="ububble">${v}</div>`,'user');
+    setTimeout(()=>{
+      addMsg(`<div class="arow"><div class="atext">Processing your request…</div></div>`);
+      e('cmsgs').scrollTop=e('cmsgs').scrollHeight;
+    },400);
+  }
+}
+
+let isResizing=false, resizeStartX=0, startCW=0, startRW=0;
+
+function startResize(ev){
+  isResizing=true;
+  resizeStartX=ev.clientX;
+  const cp=e('cpane'), rp=e('rpanel');
+  startCW=cp.offsetWidth;
+  startRW=rp.offsetWidth;
+  rp.style.transition='none';
+  document.addEventListener('mousemove',doResize);
+  document.addEventListener('mouseup',stopResize);
+  ev.preventDefault();
+}
+
+function doResize(ev){
+  if(!isResizing)return;
+  const dx=ev.clientX-resizeStartX;
+  const rp=e('rpanel');
+  const total=startCW+startRW;
+  let newRW=Math.max(240,Math.min(total-280,startRW-dx));
+  rp.style.flexBasis=newRW+'px';
+  rp.style.flex='0 0 '+newRW+'px';
+  clearTimeout(window._resizeTimer);
+  window._resizeTimer=setTimeout(()=>{
+    if(e('rmap').style.display==='flex') buildNetGraph();
+  },50);
+}
+
+function stopResize(){
+  isResizing=false;
+  e('rpanel').style.transition='';
+  document.removeEventListener('mousemove',doResize);
+  document.removeEventListener('mouseup',stopResize);
+}
+
+function resetDemo(){
+  step=0;
+  e('estate').style.display='flex';
+  e('cmsgs').style.display='none';
+  e('cmsgs').innerHTML='';
+  e('cinput-bar').style.display='none';
+  closeRight();
+  e('main-input').value='';
+  if(e('cinput'))e('cinput').value='';
+}
+</script>
+</body>
+</html>

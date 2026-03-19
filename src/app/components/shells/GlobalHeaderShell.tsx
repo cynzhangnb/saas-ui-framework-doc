@@ -50,7 +50,7 @@ export function GlobalHeaderShell() {
             <div className="flex-1"></div>
             
             {/* Bottom label */}
-            <div className="text-xs text-gray-500 font-['Geist_Mono'] text-center">Page-level Nav e.g. File Browser</div>
+            <div className="text-xs text-gray-500 font-['Geist_Mono'] text-center"><div>Page-level Nav</div><div className="whitespace-nowrap">e.g. File Browser</div></div>
           </div>
 
           {/* Workspace - Main content area */}

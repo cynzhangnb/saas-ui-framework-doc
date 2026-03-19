@@ -58,8 +58,7 @@ export function WorkspaceCentricShell() {
           
           {/* Bottom label */}
           <div className="text-xs text-gray-500 font-['Geist_Mono'] text-center">
-            <div>Page-level Nav e.g. File Browser</div>
-            <div>AI Chat/Details Pane</div>
+            <div>Page-level Nav</div><div className="whitespace-nowrap">e.g. File Browser</div>
           </div>
         </div>
 

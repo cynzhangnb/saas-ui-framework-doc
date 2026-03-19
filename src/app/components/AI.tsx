@@ -1,5 +1,6 @@
 import { GlobalAIDemo } from './demos/GlobalAIDemo';
 import { ContextualAIDemo } from './demos/ContextualAIDemo';
+import aiWorkspaceDemoHtml from '../../../public/demos/ai_workspace_demo.html?raw';
 
 export function AI() {
   return (
@@ -46,7 +47,7 @@ export function AI() {
 
           {/* 1. Global AI */}
           <div className="mb-[24px]">
-            <div className="w-[82%]">
+            <div className="w-[82%] mb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-1">
                 1. Global AI <span className="font-normal text-gray-500">— AI First</span>
               </h3>
@@ -55,14 +56,19 @@ export function AI() {
               </p>
 
               <p className="text-xs font-medium tracking-wider uppercase text-gray-500 mb-2">UI / Behavior</p>
-              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 ml-4 mb-4">
+              <ul className="list-disc list-inside text-sm text-gray-700 space-y-1 ml-4">
                 <li>Opens AI Canvas (full-page workspace)</li>
                 <li>AI is the primary interaction surface</li>
                 <li>User asks questions and AI can generate outputs (e.g. map, report, analysis)</li>
                 <li>User can add outputs onto the AI canvas and save it</li>
               </ul>
-              <p className="text-sm text-gray-400 italic">Interactive demo will be added...</p>
             </div>
+            <iframe
+              srcDoc={aiWorkspaceDemoHtml}
+              className="w-full rounded-xl border border-gray-200"
+              style={{ height: '660px', boxShadow: '0 2px 24px rgba(0,0,0,0.1)' }}
+              title="Global AI Workspace Demo"
+            />
           </div>
 
           </div>{/* end AI Modes + Global AI group */}

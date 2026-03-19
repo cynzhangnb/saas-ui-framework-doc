@@ -5,7 +5,7 @@ export function Sidebar() {
     { id: 'product-ia', label: 'Product IA' },
     { id: 'navigation-system', label: 'Navigation' },
     { id: 'pane-behavior', label: 'Pane' },
-    { id: 'ai', label: 'AI' },
+    { id: 'ai', label: 'AI Interaction Model' },
     { id: 'header-behavior', label: 'Header' },
     { id: 'page-patterns', label: 'Page Patterns' },
   ];
