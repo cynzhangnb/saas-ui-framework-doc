@@ -332,7 +332,8 @@ function switchSvg(){
 function buildNetGraph(){
   const wrap=e('netgraph-wrap');
   wrap.querySelectorAll('.ng-node').forEach(n=>n.remove());
-  e('edgesvg').innerHTML='';
+  const svg=e('edgesvg');
+  svg.innerHTML='';
 
   NODES.forEach(n=>{
     const div=document.createElement('div');
@@ -345,25 +346,19 @@ function buildNetGraph(){
     wrap.appendChild(div);
   });
 
-  setTimeout(()=>{
-    const svg=e('edgesvg');
-    const wrBounds=wrap.getBoundingClientRect();
-    EDGES.forEach(([a,b])=>{
-      const na=e('nd-'+a), nb=e('nd-'+b);
-      if(!na||!nb)return;
-      const ra=na.getBoundingClientRect(), rb=nb.getBoundingClientRect();
-      const x1=(ra.left+ra.right)/2 - wrBounds.left;
-      const y1=(ra.top+ra.bottom)/2 - wrBounds.top;
-      const x2=(rb.left+rb.right)/2 - wrBounds.left;
-      const y2=(rb.top+rb.bottom)/2 - wrBounds.top;
-      const line=document.createElementNS('http://www.w3.org/2000/svg','line');
-      line.setAttribute('x1',x1); line.setAttribute('y1',y1);
-      line.setAttribute('x2',x2); line.setAttribute('y2',y2);
-      line.setAttribute('stroke','#ccc');
-      line.setAttribute('stroke-width','1');
-      svg.appendChild(line);
-    });
-  },80);
+  // Use percentage positions directly — no getBoundingClientRect needed
+  const nodeMap={};
+  NODES.forEach(n=>{ nodeMap[n.id]=n; });
+  EDGES.forEach(([a,b])=>{
+    const na=nodeMap[a], nb=nodeMap[b];
+    if(!na||!nb)return;
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',na.px+'%'); line.setAttribute('y1',na.py+'%');
+    line.setAttribute('x2',nb.px+'%'); line.setAttribute('y2',nb.py+'%');
+    line.setAttribute('stroke','#ccc');
+    line.setAttribute('stroke-width','1');
+    svg.appendChild(line);
+  });
 }
 
 const BARS=[28,34,38,42,46,50,54,58,62,68,76,88];
@@ -524,9 +519,6 @@ function doResize(ev){
   rp.style.flexBasis=newRW+'px';
   rp.style.flex='0 0 '+newRW+'px';
   clearTimeout(window._resizeTimer);
-  window._resizeTimer=setTimeout(()=>{
-    if(e('rmap').style.display==='flex') buildNetGraph();
-  },50);
 }
 
 function stopResize(){
