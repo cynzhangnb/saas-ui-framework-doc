@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Left Pane · Docked v4 — Visibility Cloud</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f4;
+    --color-background-info: #e6f1fb;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #5f5e5a;
+    --color-text-tertiary: #888780;
+    --color-text-info: #185fa5;
+    --color-border-tertiary: rgba(0,0,0,0.10);
+    --color-border-secondary: rgba(0,0,0,0.18);
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1c1c1a;
+      --color-background-secondary: #252523;
+      --color-background-info: #0c447c22;
+      --color-text-primary: #f0ede8;
+      --color-text-secondary: #b4b2a9;
+      --color-text-tertiary: #888780;
+      --color-text-info: #85b7eb;
+      --color-border-tertiary: rgba(255,255,255,0.10);
+      --color-border-secondary: rgba(255,255,255,0.18);
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background-secondary);
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .demo-wrapper { width: 100%; max-width: 860px; }
+
+  .doc-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; }
+  .doc-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 14px; }
+  .checklist { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; }
+  .check-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--color-text-secondary); }
+  .check-icon { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+  .check-icon.ok  { color: #3B6D11; }
+  .check-icon.err { color: #A32D2D; }
+
+  .shell {
+    display: flex; height: 380px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    background: var(--color-background-primary);
+    user-select: none;
+  }
+
+  .nav-pane {
+    width: 52px; min-width: 52px;
+    background: var(--color-background-secondary);
+    border-right: 0.5px solid var(--color-border-tertiary);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 12px 0; gap: 4px; flex-shrink: 0;
+  }
+  .nav-icon { width: 36px; height: 36px; border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; }
+  .nav-icon.active { background: var(--color-background-info); }
+  .nav-icon-sq { width: 15px; height: 15px; border-radius: 3px; background: var(--color-border-secondary); }
+  .nav-icon.active .nav-icon-sq { background: var(--color-text-info); }
+  .nav-divider { width: 28px; height: 0.5px; background: var(--color-border-tertiary); margin: 4px 0; }
+
+  .page-area { flex: 1; display: flex; min-width: 0; }
+
+  .left-toolbar {
+    width: 32px; min-width: 32px;
+    background: var(--color-background-secondary);
+    border-right: 0.5px solid var(--color-border-tertiary);
+    display: none; flex-direction: column; align-items: center;
+    padding: 10px 0; gap: 6px; flex-shrink: 0;
+  }
+  .left-toolbar.visible { display: flex; }
+  .tb-icon {
+    width: 22px; height: 22px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: background 100ms;
+  }
+  .tb-icon:hover { background: var(--color-border-tertiary); }
+  .tb-icon-sq { width: 9px; height: 9px; border-radius: 2px; background: var(--color-border-secondary); }
+
+  .left-pane {
+    width: 220px; min-width: 140px; max-width: 360px;
+    background: var(--color-background-secondary);
+    display: flex; flex-direction: column; flex-shrink: 0;
+    border-right: 0.5px solid var(--color-border-tertiary);
+    overflow: hidden;
+    transition: width 200ms ease-out;
+  }
+  .left-pane.collapsed { width: 0; min-width: 0; border-right-width: 0; }
+
+  .lp-header {
+    padding: 10px 10px 9px;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .lp-title { font-size: 11px; font-weight: 500; color: var(--color-text-primary); white-space: nowrap; }
+  .lp-collapse {
+    width: 18px; height: 18px; border-radius: 3px; border: none; background: none;
+    cursor: pointer; font-size: 12px; color: var(--color-text-tertiary);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lp-collapse:hover { background: var(--color-border-tertiary); }
+
+  .lp-body {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 12px 10px 12px; overflow: hidden;
+  }
+
+  .chat-input {
+    height: 100px; border-radius: 8px;
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-secondary);
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 8px; gap: 6px; flex-shrink: 0;
+  }
+  .input-ph-line { height: 5px; border-radius: 3px; background: var(--color-border-tertiary); width: 55%; }
+  .input-actions { display: flex; justify-content: flex-end; }
+  .input-send-dot { width: 22px; height: 22px; border-radius: 5px; background: var(--color-border-tertiary); }
+
+  .resize-handle {
+    width: 4px; flex-shrink: 0; background: transparent;
+    cursor: col-resize; z-index: 10; transition: background 120ms;
+  }
+  .resize-handle:hover  { background: var(--color-text-info); opacity: 0.4; }
+  .resize-handle.active { background: var(--color-text-info); opacity: 0.6; }
+
+  .workspace { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .ws-header {
+    padding: 10px 14px 9px;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    display: flex; align-items: center; flex-shrink: 0;
+  }
+  .ws-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+  .ws-body {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    position: relative; background: var(--color-background-primary);
+  }
+  .ws-placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .ws-ph-line { height: 6px; border-radius: 3px; background: var(--color-border-tertiary); }
+
+  .width-indicator {
+    position: absolute; top: 8px; right: 10px;
+    font-size: 10px; color: var(--color-text-tertiary);
+    font-family: monospace; opacity: 0; transition: opacity 200ms; pointer-events: none;
+  }
+  .width-indicator.visible { opacity: 1; }
+  .resize-hint {
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: var(--color-text-tertiary);
+    white-space: nowrap; pointer-events: none; transition: opacity 300ms;
+  }
+  .resize-hint.hidden { opacity: 0; }
+</style>
+</head>
+<body>
+<div class="demo-wrapper">
+  <div class="doc-title">Left Pane · Docked</div>
+  <div class="doc-desc">Docked left pane is part of the page, same level as the workspace. Width is resizable by dragging the divider.</div>
+  <div class="checklist">
+    <div class="check-row"><span class="check-icon ok">✓</span><span>Use when the tool needs to coexist with workspace content</span></div>
+    <div class="check-row"><span class="check-icon ok">✓</span><span>Persistent — stays open across interactions</span></div>
+    <div class="check-row"><span class="check-icon ok">✓</span><span>Resizable to balance pane and workspace width</span></div>
+    <div class="check-row"><span class="check-icon err">✗</span><span>Avoid when workspace compression would break usability — use a flyout instead</span></div>
+  </div>
+
+  <div class="shell">
+    <div class="nav-pane">
+      <div class="nav-icon"><div class="nav-icon-sq" style="background:var(--color-border-tertiary)"></div></div>
+      <div class="nav-icon active"><div class="nav-icon-sq"></div></div>
+      <div class="nav-divider"></div>
+      <div class="nav-icon"><div class="nav-icon-sq" style="background:var(--color-border-tertiary)"></div></div>
+      <div class="nav-icon"><div class="nav-icon-sq" style="background:var(--color-border-tertiary)"></div></div>
+    </div>
+
+    <div class="page-area">
+      <div class="left-toolbar" id="leftToolbar">
+        <div class="tb-icon" onclick="expandPane()"><div class="tb-icon-sq"></div></div>
+        <div class="tb-icon"><div class="tb-icon-sq"></div></div>
+        <div class="tb-icon"><div class="tb-icon-sq"></div></div>
+      </div>
+
+      <div class="left-pane" id="leftPane">
+        <div class="lp-header">
+          <span class="lp-title">AI</span>
+          <button class="lp-collapse" onclick="collapsePane()">‹</button>
+        </div>
+        <div class="lp-body">
+          <div style="flex:1"></div>
+          <div class="chat-input">
+            <div class="input-ph-line"></div>
+            <div class="input-actions">
+              <div class="input-send-dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="resize-handle" id="resizeHandle"></div>
+
+      <div class="workspace">
+        <div class="ws-header">
+          <span class="ws-title">Workspace</span>
+        </div>
+        <div class="ws-body">
+          <div class="ws-placeholder">
+            <div class="ws-ph-line" style="width:160px"></div>
+            <div class="ws-ph-line" style="width:120px; opacity:0.6"></div>
+            <div class="ws-ph-line" style="width:140px; opacity:0.4"></div>
+          </div>
+          <div class="width-indicator" id="widthIndicator"></div>
+          <div class="resize-hint" id="resizeHint">← drag divider to resize →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var pane    = document.getElementById('leftPane');
+var toolbar = document.getElementById('leftToolbar');
+var handle  = document.getElementById('resizeHandle');
+var hint    = document.getElementById('resizeHint');
+var indic   = document.getElementById('widthIndicator');
+var isDragging = false, startX, startW, expanded = true;
+
+function collapsePane() {
+  expanded = false;
+  pane.classList.add('collapsed');
+  handle.style.pointerEvents = 'none';
+  handle.style.cursor = 'default';
+  hint.classList.add('hidden');
+  setTimeout(function() { toolbar.classList.add('visible'); }, 180);
+}
+
+function expandPane() {
+  expanded = true;
+  toolbar.classList.remove('visible');
+  pane.classList.remove('collapsed');
+  handle.style.pointerEvents = '';
+  handle.style.cursor = 'col-resize';
+  hint.classList.remove('hidden');
+}
+
+handle.addEventListener('mousedown', function(e) {
+  if (!expanded) return;
+  isDragging = true; startX = e.clientX; startW = pane.offsetWidth;
+  handle.classList.add('active');
+  hint.classList.add('hidden');
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (!isDragging) return;
+  var newW = Math.min(360, Math.max(140, startW + e.clientX - startX));
+  pane.style.width = newW + 'px';
+  indic.textContent = Math.round(newW) + 'px';
+  indic.classList.add('visible');
+});
+
+document.addEventListener('mouseup', function() {
+  if (!isDragging) return;
+  isDragging = false;
+  handle.classList.remove('active');
+  setTimeout(function(){ indic.classList.remove('visible'); }, 800);
+});
+</script>
+</body>
+</html>

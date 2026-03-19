@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Right Pane · Pushed — Inventory Demo v2 — Visibility Cloud</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f4;
+    --color-background-tertiary: #eeece8;
+    --color-background-info: #e6f1fb;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #5f5e5a;
+    --color-text-tertiary: #888780;
+    --color-text-info: #185fa5;
+    --color-border-tertiary: rgba(0,0,0,0.10);
+    --color-border-secondary: rgba(0,0,0,0.18);
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1c1c1a;
+      --color-background-secondary: #252523;
+      --color-background-tertiary: #2e2e2c;
+      --color-background-info: #0c447c22;
+      --color-text-primary: #f0ede8;
+      --color-text-secondary: #b4b2a9;
+      --color-text-tertiary: #888780;
+      --color-text-info: #85b7eb;
+      --color-border-tertiary: rgba(255,255,255,0.10);
+      --color-border-secondary: rgba(255,255,255,0.18);
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background-secondary);
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .demo-wrapper { width: 100%; max-width: 860px; }
+  .demo-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--color-text-tertiary); margin-bottom: 12px; font-weight: 500;
+  }
+
+  .shell {
+    display: flex; height: 500px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    background: var(--color-background-primary);
+  }
+
+  .nav-pane {
+    width: 52px; min-width: 52px;
+    background: var(--color-background-secondary);
+    border-right: 0.5px solid var(--color-border-tertiary);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 12px 0; gap: 4px; flex-shrink: 0;
+  }
+  .nav-icon { width: 36px; height: 36px; border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; }
+  .nav-icon.active { background: var(--color-background-info); }
+  .icon-sq { width: 15px; height: 15px; border-radius: 3px; background: var(--color-border-secondary); }
+  .nav-icon.active .icon-sq { background: var(--color-text-info); }
+  .nav-divider { width: 28px; height: 0.5px; background: var(--color-border-tertiary); margin: 4px 0; }
+
+  .workspace { flex: 1; display: flex; min-width: 0; overflow: hidden; }
+
+  .list-area {
+    flex: 1; display: flex; flex-direction: column; min-width: 0;
+    position: relative;
+  }
+
+  .ws-header {
+    padding: 10px 14px 9px;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .ws-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+  .ws-hint { font-size: 11px; color: var(--color-text-tertiary); transition: opacity 300ms; }
+  .ws-hint.hidden { opacity: 0; }
+
+  .table-wrap { flex: 1; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-family: var(--font-sans); }
+  thead th {
+    padding: 7px 12px; font-size: 11px; font-weight: 500;
+    color: var(--color-text-tertiary); text-align: left;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    background: var(--color-background-secondary);
+    position: sticky; top: 0; white-space: nowrap;
+  }
+  tbody tr { border-bottom: 0.5px solid var(--color-border-tertiary); cursor: pointer; transition: background 80ms; }
+  tbody tr:hover { background: var(--color-background-secondary); }
+  tbody tr.selected { background: var(--color-background-info); }
+  tbody td { padding: 8px 12px; font-size: 12px; color: var(--color-text-primary); white-space: nowrap; }
+  tbody td.muted { color: var(--color-text-tertiary); }
+
+  .nav-keys-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 7px 14px;
+    border-top: 0.5px solid var(--color-border-tertiary);
+    background: var(--color-background-primary);
+    display: none; align-items: center; gap: 5px;
+    font-size: 10px; color: var(--color-text-tertiary);
+  }
+  .nav-keys-bar.visible { display: flex; }
+  .key-badge {
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 0.5px solid var(--color-border-secondary);
+    background: var(--color-background-secondary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: var(--color-text-secondary);
+  }
+
+  .right-pane {
+    width: 0; min-width: 0; overflow: hidden;
+    border-left: 0px solid var(--color-border-tertiary);
+    background: var(--color-background-secondary);
+    display: flex; flex-direction: column; flex-shrink: 0;
+    transition: width 220ms ease-out, border-left-width 220ms ease-out;
+  }
+  .right-pane.open { width: 280px; min-width: 280px; border-left-width: 0.5px; }
+  .rp-inner { width: 280px; min-width: 280px; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+
+  .rp-header {
+    padding: 10px 14px 9px;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .rp-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+  .rp-close {
+    width: 20px; height: 20px; border-radius: 4px; border: none; background: none;
+    cursor: pointer; font-size: 12px; color: var(--color-text-tertiary);
+    display: flex; align-items: center; justify-content: center; font-family: var(--font-sans);
+  }
+  .rp-close:hover { background: var(--color-border-tertiary); color: var(--color-text-primary); }
+
+  .rp-tabs {
+    display: flex; border-bottom: 0.5px solid var(--color-border-tertiary);
+    padding: 0 14px; flex-shrink: 0;
+  }
+  .rp-tab {
+    padding: 7px 0; margin-right: 14px;
+    font-size: 11px; color: var(--color-text-tertiary);
+    cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap;
+    font-family: var(--font-sans);
+  }
+  .rp-tab.active { color: var(--color-text-info); border-bottom-color: var(--color-text-info); }
+
+  .rp-body { flex: 1; overflow-y: auto; padding: 12px 14px; }
+  .rp-section-label {
+    font-size: 10px; font-weight: 500; letter-spacing: 0.06em;
+    color: var(--color-text-tertiary); text-transform: uppercase;
+    margin-bottom: 6px; margin-top: 12px; font-family: var(--font-sans);
+  }
+  .rp-section-label:first-child { margin-top: 0; }
+  .rp-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-family: var(--font-sans);
+  }
+  .rp-row:last-child { border-bottom: none; }
+  .rp-key { font-size: 11px; color: var(--color-text-tertiary); }
+  .rp-val { font-size: 11px; color: var(--color-text-primary); font-weight: 500; }
+  .rp-val.ok  { color: #3B6D11; }
+  .rp-val.warn { color: #854F0B; }
+  .rp-val.err  { color: #A32D2D; }
+
+  .legend {
+    padding: 12px 2px 14px; display: flex; gap: 24px;
+    font-size: 11px; color: var(--color-text-tertiary); flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+<div class="demo-wrapper">
+  <div class="demo-label">Pane pattern · Right pane pushed — inventory</div>
+
+  <div class="shell">
+    <div class="nav-pane">
+      <div class="nav-icon active"><div class="icon-sq"></div></div>
+      <div class="nav-icon"><div class="icon-sq" style="background:var(--color-border-tertiary)"></div></div>
+      <div class="nav-divider"></div>
+      <div class="nav-icon"><div class="icon-sq" style="background:var(--color-border-tertiary)"></div></div>
+      <div class="nav-icon"><div class="icon-sq" style="background:var(--color-border-tertiary)"></div></div>
+    </div>
+
+    <div class="workspace">
+      <div class="list-area">
+        <div class="ws-header">
+          <span class="ws-title">Device Inventory</span>
+          <span class="ws-hint" id="wsHint">Click any row to open detail</span>
+        </div>
+        <div class="table-wrap" id="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Hostname</th>
+                <th id="th-type">Type</th>
+                <th id="th-ip">IP Address</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="nav-keys-bar" id="navKeysBar">
+          <div class="key-badge">↑</div>
+          <div class="key-badge">↓</div>
+          <span>navigate rows · Esc to close</span>
+        </div>
+      </div>
+
+      <div class="right-pane" id="rightPane">
+        <div class="rp-inner">
+          <div class="rp-header">
+            <span class="rp-title" id="rpTitle">—</span>
+            <button class="rp-close" onclick="closePane()">✕</button>
+          </div>
+          <div class="rp-tabs">
+            <div class="rp-tab active" onclick="switchTab(0,this)">Overview</div>
+            <div class="rp-tab" onclick="switchTab(1,this)">Interfaces</div>
+            <div class="rp-tab" onclick="switchTab(2,this)">Alerts</div>
+          </div>
+          <div class="rp-body" id="rpBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span>→ Pane pushes the list — both remain visible and interactive</span>
+    <span>→ No backdrop — list is not blocked</span>
+  </div>
+</div>
+
+<script>
+var devices = [
+  { host:'core-sw-01',  type:'Switch',   status:'ok',  ip:'10.0.1.1', vendor:'Cisco',     model:'Catalyst 9300', os:'IOS-XE 17.6', uptime:'42d 3h',  cpu:'12%', mem:'38%' },
+  { host:'core-sw-02',  type:'Switch',   status:'ok',  ip:'10.0.1.2', vendor:'Cisco',     model:'Catalyst 9300', os:'IOS-XE 17.6', uptime:'42d 2h',  cpu:'9%',  mem:'34%' },
+  { host:'edge-rtr-01', type:'Router',   status:'warn',ip:'10.0.2.1', vendor:'Cisco',     model:'ASR 1001-X',    os:'IOS-XE 17.3', uptime:'18d 6h',  cpu:'74%', mem:'61%' },
+  { host:'fw-01',       type:'Firewall', status:'ok',  ip:'10.0.3.1', vendor:'Palo Alto', model:'PA-3220',       os:'PAN-OS 10.2', uptime:'90d 1h',  cpu:'22%', mem:'45%' },
+  { host:'dist-sw-01',  type:'Switch',   status:'ok',  ip:'10.0.4.1', vendor:'Juniper',   model:'EX4300',        os:'Junos 21.4',  uptime:'31d 9h',  cpu:'8%',  mem:'29%' },
+  { host:'dist-sw-02',  type:'Switch',   status:'err', ip:'10.0.4.2', vendor:'Juniper',   model:'EX4300',        os:'Junos 21.4',  uptime:'0d 0h',   cpu:'—',   mem:'—'   },
+  { host:'access-sw-03',type:'Switch',   status:'ok',  ip:'10.0.5.3', vendor:'Cisco',     model:'Catalyst 2960', os:'IOS 15.2',    uptime:'65d 11h', cpu:'5%',  mem:'22%' },
+  { host:'vpn-gw-01',   type:'VPN GW',  status:'warn',ip:'10.0.6.1', vendor:'Cisco',     model:'FTD 2110',      os:'FTD 7.2',     uptime:'7d 4h',   cpu:'58%', mem:'70%' },
+];
+
+var selectedIdx = -1;
+var activeTab = 0;
+
+function vc(s) { return s==='ok'?'ok':s==='warn'?'warn':'err'; }
+
+function renderTable() {
+  var tb = document.getElementById('tableBody');
+  var narrow = selectedIdx >= 0;
+  document.getElementById('th-type').style.display = narrow ? 'none' : '';
+  document.getElementById('th-ip').style.display = narrow ? 'none' : '';
+  document.getElementById('tableWrap').style.paddingBottom = narrow ? '34px' : '0';
+  tb.innerHTML = '';
+  devices.forEach(function(d, i) {
+    var tr = document.createElement('tr');
+    if (i === selectedIdx) tr.classList.add('selected');
+    tr.innerHTML =
+      '<td>' + d.host + '</td>' +
+      '<td class="muted" style="display:' + (narrow?'none':'') + '">' + d.type + '</td>' +
+      '<td class="muted" style="display:' + (narrow?'none':'') + '">' + d.ip + '</td>';
+    tr.onclick = function() { selectRow(i); };
+    tb.appendChild(tr);
+  });
+}
+
+function selectRow(i) {
+  selectedIdx = i; activeTab = 0;
+  renderTable();
+  document.getElementById('rightPane').classList.add('open');
+  document.getElementById('wsHint').classList.add('hidden');
+  document.getElementById('navKeysBar').classList.add('visible');
+  document.querySelectorAll('.rp-tab').forEach(function(t,j){ t.classList.toggle('active', j===0); });
+  renderDetail();
+}
+
+function renderDetail() {
+  var d = devices[selectedIdx];
+  document.getElementById('rpTitle').textContent = d.host;
+  var body = document.getElementById('rpBody');
+  if (activeTab === 0) {
+    body.innerHTML =
+      '<div class="rp-section-label">Identity</div>' +
+      row('Hostname', d.host) + row('IP Address', d.ip) + row('Type', d.type) +
+      row('Vendor', d.vendor) + row('Model', d.model) +
+      '<div class="rp-section-label">System</div>' +
+      row('OS Version', d.os) + row('Uptime', d.uptime) +
+      '<div class="rp-section-label">Health</div>' +
+      row('CPU', d.cpu) + row('Memory', d.mem);
+  } else if (activeTab === 1) {
+    var ifaces = d.type==='Firewall' ? ['Gi0/0 — WAN','Gi0/1 — LAN','Gi0/2 — DMZ'] :
+                 d.type==='Router'   ? ['Gi0/0','Gi0/1','Gi0/2 (uplink)'] :
+                                       ['Gi0/1','Gi0/2','Gi0/3','Gi0/24 (uplink)'];
+    var html = '<div class="rp-section-label">Interfaces</div>';
+    ifaces.forEach(function(f) { html += rowS(f, d.status==='err'?'Down':'Up', d.status==='err'?'err':'ok'); });
+    body.innerHTML = html;
+  } else {
+    var alerts = d.status==='err'  ? ['Device unreachable','Uptime reset detected'] :
+                 d.status==='warn' ? ['High CPU utilization','Interface error rate elevated'] : [];
+    var html = '<div class="rp-section-label">Active alerts (' + alerts.length + ')</div>';
+    if (!alerts.length) {
+      html += '<div style="font-size:11px;color:var(--color-text-tertiary);font-family:var(--font-sans);padding:8px 0;">No active alerts</div>';
+    } else {
+      alerts.forEach(function(a) { html += rowS(a, 'Active', d.status); });
+    }
+    body.innerHTML = html;
+  }
+}
+
+function row(k, v) {
+  return '<div class="rp-row"><span class="rp-key">'+k+'</span><span class="rp-val">'+v+'</span></div>';
+}
+function rowS(k, v, s) {
+  return '<div class="rp-row"><span class="rp-key">'+k+'</span><span class="rp-val '+vc(s)+'">'+v+'</span></div>';
+}
+
+function switchTab(i, el) {
+  activeTab = i;
+  document.querySelectorAll('.rp-tab').forEach(function(t,j){ t.classList.toggle('active', j===i); });
+  renderDetail();
+}
+
+function closePane() {
+  selectedIdx = -1;
+  document.getElementById('rightPane').classList.remove('open');
+  document.getElementById('wsHint').classList.remove('hidden');
+  document.getElementById('navKeysBar').classList.remove('visible');
+  renderTable();
+}
+
+document.addEventListener('keydown', function(e) {
+  if (selectedIdx === -1) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); navigate(1); }
+  if (e.key === 'ArrowUp')   { e.preventDefault(); navigate(-1); }
+  if (e.key === 'Escape')    { closePane(); }
+});
+
+function navigate(dir) {
+  var next = selectedIdx + dir;
+  if (next < 0) next = devices.length - 1;
+  if (next >= devices.length) next = 0;
+  selectRow(next);
+}
+
+renderTable();
+</script>
+</body>
+</html>

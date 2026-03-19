@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Float Pane · Landing Selector — Visibility Cloud</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f5f5f4;
+    --color-background-tertiary: #eeece8;
+    --color-background-info: #e6f1fb;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #5f5e5a;
+    --color-text-tertiary: #888780;
+    --color-text-info: #185fa5;
+    --color-border-tertiary: rgba(0,0,0,0.10);
+    --color-border-secondary: rgba(0,0,0,0.18);
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background-primary: #1c1c1a;
+      --color-background-secondary: #252523;
+      --color-background-tertiary: #2e2e2c;
+      --color-background-info: #0c447c22;
+      --color-text-primary: #f0ede8;
+      --color-text-secondary: #b4b2a9;
+      --color-text-tertiary: #888780;
+      --color-text-info: #85b7eb;
+      --color-border-tertiary: rgba(255,255,255,0.10);
+      --color-border-secondary: rgba(255,255,255,0.18);
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-background-secondary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .demo-wrapper { width: 100%; max-width: 800px; }
+
+  .demo-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-tertiary);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  .shell {
+    display: flex;
+    height: 460px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    background: var(--color-background-primary);
+    position: relative;
+  }
+
+  .nav-pane {
+    width: 52px; min-width: 52px;
+    border-right: 0.5px solid var(--color-border-tertiary);
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 12px 0; gap: 4px;
+    background: var(--color-background-secondary);
+    z-index: 30; flex-shrink: 0;
+  }
+
+  .nav-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--border-radius-md);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background 120ms;
+    position: relative; flex-shrink: 0;
+  }
+  .nav-icon:hover { background: var(--color-background-primary); }
+  .nav-icon.active { background: var(--color-background-info); }
+
+  .icon-sq {
+    width: 15px; height: 15px;
+    border-radius: 3px;
+  }
+  .icon-sq.dim { background: var(--color-border-secondary); }
+  .icon-sq.bold { background: var(--color-text-secondary); }
+  .nav-icon.active .icon-sq { background: var(--color-text-info); }
+
+  .nav-divider {
+    width: 28px; height: 0.5px;
+    background: var(--color-border-tertiary);
+    margin: 4px 0;
+  }
+
+  .nav-tooltip {
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 50%; transform: translateY(-50%);
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    padding: 3px 8px;
+    font-size: 11px;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 100ms;
+    z-index: 100;
+  }
+  .nav-icon:hover .nav-tooltip { opacity: 1; }
+
+  .float-pane {
+    position: absolute;
+    top: 0; bottom: 0; left: 52px;
+    width: 220px;
+    background: var(--color-background-secondary);
+    border-right: 0.5px solid var(--color-border-secondary);
+    display: flex; flex-direction: column;
+    z-index: 20;
+    transform: translateX(-220px);
+    opacity: 0;
+    transition: transform 200ms ease-out, opacity 180ms ease-out;
+    pointer-events: none;
+    overflow: hidden;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.13);
+  }
+  .float-pane.visible {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .fp-header {
+    padding: 12px 14px 10px;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .fp-title { font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+  .fp-close {
+    width: 18px; height: 18px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--color-text-tertiary);
+    font-size: 12px; transition: background 120ms;
+    background: none; border: none; font-family: var(--font-sans);
+  }
+  .fp-close:hover { background: var(--color-border-tertiary); color: var(--color-text-primary); }
+
+  .fp-search { padding: 8px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); flex-shrink: 0; }
+  .search-bar {
+    width: 100%; height: 26px; border-radius: 5px;
+    background: var(--color-border-tertiary);
+    display: flex; align-items: center; padding: 0 8px; gap: 6px;
+  }
+  .search-icon { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--color-text-tertiary); flex-shrink: 0; }
+  .search-bar-line { height: 5px; border-radius: 3px; background: var(--color-text-tertiary); opacity: 0.4; width: 60%; }
+
+  .fp-list { overflow-y: auto; flex: 1; padding: 6px 0; }
+
+  .fp-section { padding: 8px 12px 4px; display: flex; align-items: center; gap: 6px; }
+  .fp-section-icon { width: 12px; height: 12px; border-radius: 2px; background: var(--color-text-tertiary); opacity: 0.5; flex-shrink: 0; }
+  .fp-section-line { height: 5px; border-radius: 3px; background: var(--color-text-tertiary); opacity: 0.35; }
+
+  .fp-item { display: flex; align-items: center; gap: 7px; padding: 5px 12px 5px 22px; cursor: pointer; transition: background 100ms; }
+  .fp-item:hover { background: var(--color-background-primary); }
+  .fp-item.active { background: var(--color-background-info); }
+
+  .fp-item-dot { width: 8px; height: 8px; border-radius: 2px; background: var(--color-text-tertiary); opacity: 0.5; flex-shrink: 0; }
+  .fp-item.active .fp-item-dot { background: var(--color-text-info); opacity: 1; }
+  .fp-item-line { height: 5px; border-radius: 3px; background: var(--color-text-secondary); opacity: 0.3; }
+  .fp-item.active .fp-item-line { background: var(--color-text-info); opacity: 0.6; }
+
+  .fp-item-sub { display: flex; align-items: center; gap: 7px; padding: 4px 12px 4px 32px; cursor: pointer; transition: background 100ms; }
+  .fp-item-sub:hover { background: var(--color-background-primary); }
+  .fp-item-sub.active { background: var(--color-background-info); }
+  .fp-sub-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--color-text-tertiary); opacity: 0.4; flex-shrink: 0; }
+  .fp-item-sub.active .fp-sub-dot { background: var(--color-text-info); opacity: 1; }
+  .fp-sub-line { height: 4px; border-radius: 3px; background: var(--color-text-secondary); opacity: 0.25; }
+  .fp-item-sub.active .fp-sub-line { background: var(--color-text-info); opacity: 0.5; }
+
+  .workspace {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 8px;
+    background: var(--color-background-primary);
+  }
+  .ws-label { font-size: 18px; font-weight: 500; color: var(--color-text-primary); }
+  .ws-sub { font-size: 12px; color: var(--color-text-tertiary); }
+  .placeholder-lines { margin-top: 20px; width: 240px; display: flex; flex-direction: column; gap: 8px; }
+  .ph-line { height: 8px; border-radius: 4px; background: var(--color-border-tertiary); }
+
+  .legend { margin-top: 12px; display: flex; gap: 24px; font-size: 11px; color: var(--color-text-tertiary); }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+</style>
+</head>
+<body>
+<div class="demo-wrapper">
+  <div class="demo-label">Nav pattern · Float pane — Landing selector</div>
+
+  <div class="shell">
+    <div class="nav-pane">
+      <div class="nav-icon active" id="nav-dashboard" onclick="selectNav('dashboard', this)">
+        <div class="icon-sq dim"></div>
+        <div class="nav-tooltip">Dashboard</div>
+      </div>
+      <div class="nav-icon" id="nav-map" onclick="selectNav('map', this)">
+        <div class="icon-sq bold"></div>
+        <div class="nav-tooltip">Map</div>
+      </div>
+      <div class="nav-icon" id="nav-network" onclick="selectNav('network', this)">
+        <div class="icon-sq dim"></div>
+        <div class="nav-tooltip">Network</div>
+      </div>
+      <div class="nav-divider"></div>
+      <div class="nav-icon" id="nav-inventory" onclick="selectNav('inventory', this)">
+        <div class="icon-sq dim"></div>
+        <div class="nav-tooltip">Inventory</div>
+      </div>
+      <div class="nav-icon" id="nav-reports" onclick="selectNav('reports', this)">
+        <div class="icon-sq bold"></div>
+        <div class="nav-tooltip">Reports</div>
+      </div>
+      <div class="nav-divider"></div>
+      <div class="nav-icon" id="nav-ai" onclick="selectNav('ai', this)">
+        <div class="icon-sq dim"></div>
+        <div class="nav-tooltip">AI Assist</div>
+      </div>
+    </div>
+
+    <div class="float-pane" id="floatPane">
+      <div class="fp-header">
+        <span class="fp-title" id="fp-title">Map browser</span>
+        <button class="fp-close" onclick="closePane()">✕</button>
+      </div>
+      <div class="fp-search">
+        <div class="search-bar">
+          <div class="search-icon"></div>
+          <div class="search-bar-line"></div>
+        </div>
+      </div>
+      <div class="fp-list">
+        <div class="fp-section">
+          <div class="fp-section-icon" style="border-radius:50%;"></div>
+          <div class="fp-section-line" style="width:38px;"></div>
+        </div>
+        <div class="fp-item active" onclick="openItem('HQ Topology', this)">
+          <div class="fp-item-dot"></div><div class="fp-item-line" style="width:80px;"></div>
+        </div>
+        <div class="fp-item" onclick="openItem('Branch East', this)">
+          <div class="fp-item-dot"></div><div class="fp-item-line" style="width:68px;"></div>
+        </div>
+        <div class="fp-item" onclick="openItem('WAN Overview', this)">
+          <div class="fp-item-dot"></div><div class="fp-item-line" style="width:75px;"></div>
+        </div>
+        <div class="fp-section" style="margin-top:4px;">
+          <div class="fp-section-icon"></div>
+          <div class="fp-section-line" style="width:50px;"></div>
+        </div>
+        <div class="fp-item" onclick="openItem('DC Core', this)">
+          <div class="fp-item-dot"></div><div class="fp-item-line" style="width:55px;"></div>
+        </div>
+        <div class="fp-item-sub" onclick="openItem('DC Core · East', this)">
+          <div class="fp-sub-dot"></div><div class="fp-sub-line" style="width:62px;"></div>
+        </div>
+        <div class="fp-item-sub" onclick="openItem('DC Core · West', this)">
+          <div class="fp-sub-dot"></div><div class="fp-sub-line" style="width:58px;"></div>
+        </div>
+        <div class="fp-item" onclick="openItem('Branch West', this)">
+          <div class="fp-item-dot"></div><div class="fp-item-line" style="width:64px;"></div>
+        </div>
+        <div class="fp-item-sub" onclick="openItem('Branch West · A', this)">
+          <div class="fp-sub-dot"></div><div class="fp-sub-line" style="width:70px;"></div>
+        </div>
+        <div class="fp-item" onclick="openItem('MPLS Network', this)">
+          <div class="fp-item-dot"></div><div class="fp-item-line" style="width:72px;"></div>
+        </div>
+        <div class="fp-section" style="margin-top:4px;">
+          <div class="fp-section-icon" style="background:var(--color-text-info);opacity:0.5;"></div>
+          <div class="fp-section-line" style="width:44px;"></div>
+        </div>
+        <div class="fp-item" onclick="openItem('Team Shared', this)">
+          <div class="fp-item-dot"></div><div class="fp-item-line" style="width:60px;"></div>
+        </div>
+        <div class="fp-item" onclick="openItem('Shared WAN', this)">
+          <div class="fp-item-dot"></div><div class="fp-item-line" style="width:50px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="workspace">
+      <div class="ws-label" id="ws-title">Dashboard</div>
+      <div class="ws-sub" id="ws-sub">Click "Map" or "Reports" in the nav to open the float pane</div>
+      <div class="placeholder-lines">
+        <div class="ph-line" style="width:100%"></div>
+        <div class="ph-line" style="width:78%"></div>
+        <div class="ph-line" style="width:90%"></div>
+        <div class="ph-line" style="width:62%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="icon-sq dim" style="width:10px;height:10px;border-radius:2px;"></div>
+      Direct page
+    </div>
+    <div class="legend-item">
+      <div class="icon-sq bold" style="width:10px;height:10px;border-radius:2px;"></div>
+      Requires selection — opens float pane
+    </div>
+  </div>
+</div>
+
+<script>
+function selectNav(id, el) {
+  document.querySelectorAll('.nav-icon').forEach(function(n) { n.classList.remove('active'); });
+  el.classList.add('active');
+  if (id === 'map' || id === 'reports') {
+    document.getElementById('fp-title').textContent = id === 'map' ? 'Map browser' : 'Report browser';
+    document.getElementById('floatPane').classList.add('visible');
+    document.getElementById('ws-title').textContent = id === 'map' ? 'Select a map' : 'Select a report';
+    document.getElementById('ws-sub').textContent = '\u2190 Choose from the panel on the left';
+  } else {
+    closePane();
+    var titles = { dashboard:'Dashboard', network:'Network Canvas', inventory:'Inventory', ai:'AI Assist' };
+    document.getElementById('ws-title').textContent = titles[id] || id;
+    document.getElementById('ws-sub').textContent = 'Page loaded directly';
+  }
+}
+
+function closePane() {
+  document.getElementById('floatPane').classList.remove('visible');
+}
+
+function openItem(name, el) {
+  document.querySelectorAll('.fp-item, .fp-item-sub').forEach(function(n){ n.classList.remove('active'); });
+  el.classList.add('active');
+  setTimeout(function() {
+    closePane();
+    document.getElementById('ws-title').textContent = name;
+    document.getElementById('ws-sub').textContent = 'Map loaded \u2014 float pane closed automatically';
+  }, 160);
+}
+</script>
+</body>
+</html>

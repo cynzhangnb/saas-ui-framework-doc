@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nav — Docked / Overlay / Hidden Demo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f9fafb;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;overflow:hidden;}
+:root{
+  --color-border-tertiary:rgba(0,0,0,0.1);
+  --color-border-secondary:rgba(0,0,0,0.18);
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f5f5f5;
+  --color-background-tertiary:#f0f0f0;
+  --color-background-info:#e8f1fb;
+  --color-text-primary:#1a1a1a;
+  --color-text-secondary:#555;
+  --color-text-tertiary:#999;
+  --color-text-info:#1a6bc4;
+  --border-radius-lg:12px;
+  --border-radius-md:8px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --color-border-tertiary:rgba(255,255,255,0.1);
+  --color-border-secondary:rgba(255,255,255,0.18);
+  --color-background-primary:#1e1e1e;
+  --color-background-secondary:#2a2a2a;
+  --color-background-tertiary:#141414;
+  --color-background-info:#1a3a5c;
+  --color-text-primary:#e8e8e8;
+  --color-text-secondary:#aaa;
+  --color-text-tertiary:#666;
+  --color-text-info:#60a5fa;
+}}
+
+.shell{display:flex;height:580px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);overflow:hidden;position:relative;background:var(--color-background-primary);width:100%;max-width:860px;box-shadow:0 2px 24px rgba(0,0,0,0.1);}
+
+/* Sidebar */
+.sidebar{position:absolute;top:0;left:0;bottom:0;width:240px;z-index:50;background:var(--color-background-primary);border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;transform:translateX(-241px);transition:transform 0.22s cubic-bezier(0.4,0,0.2,1);box-shadow:4px 0 20px rgba(0,0,0,0.08);}
+.sidebar.open{transform:translateX(0);}
+.sidebar.docked{position:relative;transform:translateX(0);box-shadow:none;flex-shrink:0;}
+
+/* Sidebar header */
+.sb-hdr{height:44px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0;}
+/* Logo: blue square with letter N */
+.sb-app-dot{width:18px;height:18px;border-radius:4px;background:#378ADD;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;letter-spacing:0;}
+/* App name clickable to open switcher */
+.sb-app-name-btn{display:flex;align-items:center;gap:6px;flex:1;cursor:pointer;overflow:hidden;padding:3px 4px;border-radius:5px;min-width:0;}
+.sb-app-name-btn:hover{background:var(--color-background-secondary);}
+.sb-app-name{font-size:13px;font-weight:500;color:var(--color-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-app-caret{color:var(--color-text-tertiary);flex-shrink:0;}
+.sb-ctrls{display:flex;gap:2px;flex-shrink:0;}
+.sb-ctrl{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--color-text-tertiary);}
+.sb-ctrl:hover{background:var(--color-background-secondary);color:var(--color-text-primary);}
+.sb-ctrl.pinned{color:var(--color-text-info);}
+
+/* Quick links */
+.sb-quick{border-bottom:0.5px solid var(--color-border-tertiary);padding:4px 0;flex-shrink:0;}
+.sb-nav{flex:1;overflow-y:auto;padding:6px 0;scrollbar-width:none;}
+.sb-nav::-webkit-scrollbar{display:none;}
+.sb-item{display:flex;align-items:center;height:36px;padding:0 13px;gap:10px;cursor:pointer;}
+.sb-item:hover{background:var(--color-background-secondary);}
+.sb-item.active{background:var(--color-background-secondary);}
+.sb-item-icon{width:18px;height:18px;border-radius:4px;background:#9ca3af;opacity:0.5;flex-shrink:0;}
+.sb-item-lbl{font-size:13px;color:var(--color-text-secondary);}
+
+/* Domain sections — icon same 18px as quick icons */
+.sb-domain-hdr{display:flex;align-items:center;height:36px;padding:0 13px;gap:10px;cursor:pointer;}
+.sb-domain-hdr:hover{background:var(--color-background-secondary);}
+.sb-domain-icon{width:18px;height:18px;border-radius:5px;flex-shrink:0;}
+.sb-domain-lbl{font-size:13px;font-weight:500;color:var(--color-text-primary);flex:1;}
+.sb-domain-chev{font-size:10px;color:var(--color-text-tertiary);transition:transform 0.18s;opacity:0.6;}
+.sb-domain-chev.open{transform:rotate(90deg);}
+.sb-domain-ch{overflow:hidden;max-height:0;transition:max-height 0.2s ease;}
+.sb-domain-ch.open{max-height:300px;}
+.sb-child{display:flex;align-items:center;height:34px;padding:0 13px 0 41px;cursor:pointer;}
+.sb-child:hover{background:var(--color-background-secondary);}
+.sb-child.active{background:var(--color-background-secondary);}
+.sb-child-lbl{font-size:13px;color:var(--color-text-secondary);flex:1;}
+/* Remove child dot entirely — not in reference screenshots */
+.sb-child-dot{display:none;}
+
+/* Footer — utility icons */
+.sb-footer{border-top:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;padding:6px 10px;gap:2px;flex-shrink:0;}
+.util-btn{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--color-text-tertiary);flex-shrink:0;}
+.util-btn:hover{background:var(--color-background-secondary);color:var(--color-text-primary);}
+
+/* Intent flyout */
+.intent-flyout{position:absolute;left:240px;top:0;bottom:0;width:200px;background:var(--color-background-primary);border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;z-index:45;transform:translateX(-200px);opacity:0;transition:transform 0.18s cubic-bezier(0.4,0,0.2,1),opacity 0.18s ease;pointer-events:none;box-shadow:4px 0 12px rgba(0,0,0,0.07);}
+.intent-flyout.open{transform:translateX(0);opacity:1;pointer-events:all;}
+.if-hdr{height:44px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;}
+.if-hdr-name{font-size:12px;font-weight:500;color:var(--color-text-primary);flex:1;}
+.if-close{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--color-text-tertiary);}
+.if-close:hover{background:var(--color-background-secondary);}
+.if-body{flex:1;padding:6px 0;}
+.if-item{display:flex;align-items:center;height:32px;padding:0 14px;cursor:pointer;font-size:13px;color:var(--color-text-secondary);}
+.if-item:hover{background:var(--color-background-secondary);color:var(--color-text-primary);}
+
+/* Backdrop */
+.backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.2);z-index:40;opacity:0;pointer-events:none;transition:opacity 0.22s ease;}
+.backdrop.on{opacity:1;pointer-events:all;}
+
+/* Main area */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.hdr{height:44px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;background:var(--color-background-primary);}
+.hdr-hamburger{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--color-text-tertiary);flex-shrink:0;}
+.hdr-hamburger:hover{background:var(--color-background-secondary);color:var(--color-text-primary);}
+/* Hidden by default, only shown in hidden mode */
+.hdr-hamburger.docked-hidden{display:none;}
+.hdr-app-section{display:flex;align-items:center;gap:7px;}
+.hdr-app-btn{display:flex;align-items:center;gap:7px;cursor:pointer;padding:3px 7px;border-radius:6px;}
+.hdr-app-btn:hover{background:var(--color-background-secondary);}
+.hdr-app-dot{width:18px;height:18px;border-radius:4px;background:#378ADD;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;}
+.hdr-app-name{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+.hdr-app-caret{color:var(--color-text-tertiary);}
+.hdr-sep{width:0.5px;height:20px;background:var(--color-border-tertiary);margin:0 4px;flex-shrink:0;}
+.hdr-page{font-size:13px;font-weight:500;color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hdr-actions{margin-left:auto;display:flex;align-items:center;gap:4px;}
+.hdr-btn{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--color-text-tertiary);}
+.hdr-btn:hover{background:var(--color-background-secondary);}
+.hdr-avatar{width:26px;height:26px;border-radius:50%;background:var(--color-background-info);color:var(--color-text-info);font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+
+/* App switcher menu */
+.app-menu{position:absolute;left:10px;top:44px;width:210px;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);z-index:200;box-shadow:0 8px 24px rgba(0,0,0,0.1);transform:translateY(-4px);opacity:0;pointer-events:none;transition:transform 0.13s,opacity 0.13s;padding-bottom:6px;}
+.app-menu.open{transform:translateY(0);opacity:1;pointer-events:all;}
+.app-menu-hdr{padding:9px 14px 5px;font-size:10px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:0.06em;}
+.app-item{display:flex;align-items:center;gap:9px;height:36px;padding:0 14px;cursor:default;}
+.app-item:hover{background:var(--color-background-secondary);}
+.app-item.active{background:var(--color-background-secondary);}
+.app-dot{width:18px;height:18px;border-radius:4px;flex-shrink:0;}
+.app-label{font-size:13px;color:var(--color-text-primary);}
+
+/* Workspace */
+.workspace{flex:1;background:var(--color-background-tertiary);overflow:auto;padding:16px 24px 24px;display:flex;flex-direction:column;gap:10px;}
+.ws-pagetitle{font-size:15px;font-weight:500;color:var(--color-text-primary);}
+.sil{background:var(--color-border-tertiary);border-radius:4px;}
+.state-chip{display:inline-block;font-size:11px;padding:2px 10px;border-radius:10px;background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary);}
+</style>
+</head>
+<body>
+<div class="shell" id="shell">
+
+  <!-- Sidebar -->
+  <div class="sidebar docked" id="sidebar">
+    <div class="sb-hdr">
+      <div class="sb-app-dot">N</div>
+      <!-- App name button — opens app switcher -->
+      <div class="sb-app-name-btn" onclick="toggleAppMenu()" id="sb-app-name-btn">
+        <span class="sb-app-name">ACME NetOps</span>
+        <svg class="sb-app-caret" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="sb-ctrls">
+        <div class="sb-ctrl pinned" id="sb-pin" onclick="pinSidebar()" title="Pin sidebar">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.3"/><line x1="4" y1="1.5" x2="4" y2="10.5" stroke="currentColor" stroke-width="1.3"/></svg>
+        </div>
+        <div class="sb-ctrl" onclick="closeSidebar()" title="Close">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="sb-quick">
+      <div class="sb-item" onclick="navTo(this,'Home','',true)"><div class="sb-item-icon"></div><span class="sb-item-lbl">Home</span></div>
+      <div class="sb-item" onclick="navTo(this,'Recent','',true)"><div class="sb-item-icon"></div><span class="sb-item-lbl">Recent</span></div>
+      <div class="sb-item" onclick="navTo(this,'Starred','',true)"><div class="sb-item-icon"></div><span class="sb-item-lbl">Starred</span></div>
+    </div>
+
+    <div class="sb-nav">
+      <div>
+        <div class="sb-domain-hdr" onclick="toggleDom('nv')">
+          <div class="sb-domain-icon" style="background:#378ADD;"></div>
+          <span class="sb-domain-lbl">Network Visibility</span>
+          <span class="sb-domain-chev open" id="nv-chev">›</span>
+        </div>
+        <div class="sb-domain-ch open" id="nv-ch">
+          <div class="sb-child active" onclick="navTo(this,'Network','Network Visibility')"><span class="sb-child-lbl">Network</span></div>
+          <div class="sb-child" onclick="navTo(this,'Path','Network Visibility')"><span class="sb-child-lbl">Path</span></div>
+          <div class="sb-child" onclick="navTo(this,'Inventory','Network Visibility')"><span class="sb-child-lbl">Inventory</span></div>
+          <div class="sb-child" onclick="navTo(this,'File Manager','Network Visibility')"><span class="sb-child-lbl">File Manager</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sb-domain-hdr" onclick="toggleDom('auto')">
+          <div class="sb-domain-icon" style="background:#1D9E75;"></div>
+          <span class="sb-domain-lbl">Automation</span>
+          <span class="sb-domain-chev open" id="auto-chev">›</span>
+        </div>
+        <div class="sb-domain-ch open" id="auto-ch">
+          <div class="sb-child" id="intent-child" onclick="handleIntentClick(this)">
+            <span class="sb-child-lbl">Intent</span>
+            <div class="sb-child-dot"></div>
+          </div>
+          <div class="sb-child" onclick="navTo(this,'Runbook','Automation')"><span class="sb-child-lbl">Runbook</span></div>
+          <div class="sb-child" onclick="navTo(this,'ADT','Automation')"><span class="sb-child-lbl">ADT</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sb-domain-hdr" onclick="toggleDom('disc')">
+          <div class="sb-domain-icon" style="background:#D85A30;"></div>
+          <span class="sb-domain-lbl">Data & Discovery</span>
+          <span class="sb-domain-chev open" id="disc-chev">›</span>
+        </div>
+        <div class="sb-domain-ch open" id="disc-ch">
+          <div class="sb-child" onclick="navTo(this,'Discovery','Data & Discovery')"><span class="sb-child-lbl">Discovery</span></div>
+          <div class="sb-child" onclick="navTo(this,'Benchmark','Data & Discovery')"><span class="sb-child-lbl">Benchmark</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sb-domain-hdr" onclick="toggleDom('ai')">
+          <div class="sb-domain-icon" style="background:#7F77DD;"></div>
+          <span class="sb-domain-lbl">AI</span>
+          <span class="sb-domain-chev open" id="ai-chev">›</span>
+        </div>
+        <div class="sb-domain-ch open" id="ai-ch">
+          <div class="sb-child" onclick="navTo(this,'Deep Diagnosis','AI')"><span class="sb-child-lbl">Deep Diagnosis</span></div>
+          <div class="sb-child" onclick="navTo(this,'AI Bot','AI')"><span class="sb-child-lbl">AI Bot</span></div>
+          <div class="sb-child" onclick="navTo(this,'AI Insight','AI')"><span class="sb-child-lbl">AI Insight</span></div>
+          <div class="sb-child" onclick="navTo(this,'AI Document','AI')"><span class="sb-child-lbl">AI Document</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sb-domain-hdr" onclick="navTo(this,'Assessment','')">
+          <div class="sb-domain-icon" style="background:#D4537E;"></div>
+          <span class="sb-domain-lbl">Assessment</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer: utility icons -->
+    <div class="sb-footer">
+      <div class="util-btn" title="User">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="4.5" r="2.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 12c0-2.8 2.5-4.5 5.5-4.5s5.5 1.7 5.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="util-btn" title="Settings">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="1.8" stroke="currentColor" stroke-width="1.2"/><path d="M7 1.5V3M7 11v1.5M1.5 7H3M11 7h1.5M3.3 3.3l1 1M9.7 9.7l1 1M3.3 10.7l1-1M9.7 4.3l1-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="util-btn" title="Help">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 5.2a2 2 0 0 1 3.9.7c0 1.2-1.9 1.7-1.9 2.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="10.2" r="0.6" fill="currentColor"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Intent flyout -->
+  <div class="intent-flyout" id="intent-flyout">
+    <div class="if-hdr">
+      <span class="if-hdr-name">Intent</span>
+      <div class="if-close" onclick="closeIntentFlyout()">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2L8 8M8 2L2 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+    <div class="if-body">
+      <div class="if-item" onclick="navTo(this,'Intent Manager','Intent')">Intent Manager</div>
+      <div class="if-item" onclick="navTo(this,'Intent Scheduler','Intent')">Intent Scheduler</div>
+      <div class="if-item" onclick="navTo(this,'Golden Intent','Intent')">Golden Intent</div>
+    </div>
+  </div>
+
+  <div class="backdrop" id="backdrop" onclick="closeOverlay()"></div>
+
+  <!-- Main -->
+  <div class="main" id="main">
+    <div class="hdr">
+      <!-- Hamburger: only visible in hidden mode -->
+      <div class="hdr-hamburger docked-hidden" id="hdr-hamburger" onclick="handleHamburger()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="2" y="3" width="10" height="1.4" rx="0.7" fill="currentColor"/>
+          <rect x="2" y="6.3" width="10" height="1.4" rx="0.7" fill="currentColor"/>
+          <rect x="2" y="9.6" width="10" height="1.4" rx="0.7" fill="currentColor"/>
+        </svg>
+      </div>
+      <!-- App section: only in hidden mode -->
+      <div class="hdr-app-section" id="hdr-app-section" style="display:none;">
+        <div class="hdr-app-btn" onclick="toggleAppMenu()" id="hdr-app-btn">
+          <div class="hdr-app-dot">N</div>
+          <span class="hdr-app-name">ACME NetOps</span>
+          <svg class="hdr-app-caret" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="hdr-sep"></div>
+      </div>
+      <span class="hdr-page" id="hdr-page">Network</span>
+      <div class="hdr-actions">
+        <div class="hdr-btn"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="5.5" cy="5.5" r="3.5" stroke="currentColor" stroke-width="1.3"/><line x1="8.5" y1="8.5" x2="11" y2="11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+        <div class="hdr-btn"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><circle cx="6.5" cy="6.5" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M6.5 1v1.5M6.5 10v1.5M1 6.5h1.5M10 6.5h1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+        <div class="hdr-avatar">U</div>
+      </div>
+    </div>
+    <div class="workspace">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="ws-pagetitle" id="ws-title">Network</div>
+        <span class="state-chip" id="state-chip">Docked</span>
+      </div>
+      <div class="sil" style="height:10px;width:48%;"></div>
+      <div class="sil" style="height:10px;width:64%;"></div>
+      <div class="sil" style="height:10px;width:80%;"></div>
+      <div class="sil" style="height:10px;width:58%;"></div>
+      <div class="sil" style="height:10px;width:72%;"></div>
+      <div class="sil" style="height:10px;width:50%;"></div>
+    </div>
+  </div>
+
+  <!-- App switcher menu — shared between sidebar and header -->
+  <div class="app-menu" id="app-menu">
+    <div class="app-menu-hdr">Applications</div>
+    <div class="app-item active"><div class="app-dot" style="background:#378ADD;"></div><span class="app-label">ACME NetOps</span></div>
+    <div class="app-item"><div class="app-dot" style="background:#7c3aed;"></div><span class="app-label">Domain Manager</span></div>
+    <div class="app-item"><div class="app-dot" style="background:#059669;"></div><span class="app-label">SaaS Manager</span></div>
+    <div class="app-item"><div class="app-dot" style="background:#dc2626;"></div><span class="app-label">AI Studio</span></div>
+  </div>
+</div>
+
+<script>
+const sidebar=document.getElementById('sidebar');
+const backdrop=document.getElementById('backdrop');
+const sbPin=document.getElementById('sb-pin');
+const stateChip=document.getElementById('state-chip');
+const appMenu=document.getElementById('app-menu');
+const hdrAppSection=document.getElementById('hdr-app-section');
+const hdrHamburger=document.getElementById('hdr-hamburger');
+const intentFlyout=document.getElementById('intent-flyout');
+let mode='docked',appMenuOpen=false,intentOpen=false;
+
+function applyMode(m){
+  mode=m;
+  const labels={docked:'Docked',overlay:'Overlay',hidden:'Hidden'};
+  stateChip.textContent=labels[m];
+  closeIntentFlyout();
+  if(m==='docked'){
+    sidebar.className='sidebar docked';
+    backdrop.classList.remove('on');
+    sbPin.classList.add('pinned');
+    hdrAppSection.style.display='none';
+    hdrHamburger.classList.add('docked-hidden');
+  } else if(m==='overlay'){
+    sidebar.className='sidebar open';
+    backdrop.classList.add('on');
+    sbPin.classList.remove('pinned');
+    hdrAppSection.style.display='none';
+    hdrHamburger.classList.remove('docked-hidden');
+  } else if(m==='hidden'){
+    sidebar.className='sidebar';
+    backdrop.classList.remove('on');
+    sbPin.classList.remove('pinned');
+    hdrAppSection.style.display='flex';
+    hdrHamburger.classList.remove('docked-hidden');
+  }
+}
+
+function closeSidebar(){applyMode('hidden');}
+
+function pinSidebar(){
+  sidebar.style.transition='none';
+  sidebar.className='sidebar docked';
+  void sidebar.offsetWidth;
+  sidebar.style.transition='';
+  backdrop.classList.remove('on');
+  sbPin.classList.add('pinned');
+  mode='docked';stateChip.textContent='Docked';
+  hdrAppSection.style.display='none';
+  hdrHamburger.classList.add('docked-hidden');
+  closeIntentFlyout();
+}
+
+function openOverlay(){sidebar.className='sidebar';void sidebar.offsetWidth;applyMode('overlay');}
+
+function closeOverlay(){
+  sidebar.classList.remove('open');backdrop.classList.remove('on');
+  setTimeout(()=>applyMode('hidden'),220);
+}
+
+function handleHamburger(){
+  if(mode==='hidden')openOverlay();
+  else if(mode==='overlay')closeOverlay();
+}
+
+function navTo(el,page,domain,noBC){
+  document.querySelectorAll('.sb-item,.sb-child,.if-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('ws-title').textContent=page;
+  document.getElementById('hdr-page').textContent=page;
+  closeIntentFlyout();
+  if(mode==='overlay'){sidebar.classList.remove('open');backdrop.classList.remove('on');setTimeout(()=>applyMode('hidden'),220);}
+}
+
+function handleIntentClick(el){
+  if(intentOpen){closeIntentFlyout();return;}
+  document.querySelectorAll('.sb-item,.sb-child,.if-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  intentFlyout.classList.add('open');
+  intentOpen=true;
+}
+
+function closeIntentFlyout(){
+  intentFlyout.classList.remove('open');
+  intentOpen=false;
+  const ic=document.getElementById('intent-child');
+  if(ic)ic.classList.remove('active');
+}
+
+function toggleDom(id){
+  const ch=document.getElementById(id+'-ch');
+  const chev=document.getElementById(id+'-chev');
+  if(ch)ch.classList.toggle('open');
+  if(chev)chev.classList.toggle('open');
+}
+
+function toggleAppMenu(){
+  appMenuOpen=!appMenuOpen;
+  appMenu.classList.toggle('open',appMenuOpen);
+}
+
+function closeAppMenu(){appMenuOpen=false;appMenu.classList.remove('open');}
+
+document.getElementById('shell').addEventListener('click',e=>{
+  // close app menu
+  if(appMenuOpen && !appMenu.contains(e.target) && !e.target.closest('#sb-app-name-btn') && !e.target.closest('#hdr-app-btn')){
+    closeAppMenu();
+  }
+  // close intent flyout if clicking outside
+  if(intentOpen && !intentFlyout.contains(e.target) && !e.target.closest('#intent-child')){
+    closeIntentFlyout();
+  }
+});
+</script>
+</body>
+</html>

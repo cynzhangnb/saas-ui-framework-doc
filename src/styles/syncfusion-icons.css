@@ -1,0 +1,44 @@
+/* Icon styles using Material Symbols for Syncfusion-style icons */
+
+.e-icons {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.e-share::before { content: 'share'; }
+.e-list-unordered::before { content: 'list'; }
+.e-dashboard::before { content: 'dashboard'; }
+.e-file-text::before { content: 'description'; }
+.e-comment-show::before { content: 'chat'; }
+.e-settings::before { content: 'settings'; }
+.e-chevron-left::before { content: 'chevron_left'; }
+.e-chevron-right::before { content: 'chevron_right'; }
+.e-chevron-down::before { content: 'expand_more'; }
+.e-chevron-up::before { content: 'expand_less'; }
+.e-search::before { content: 'search'; }
+.e-circle-info::before { content: 'notifications'; }
+.e-help::before { content: 'help'; }
+.e-export::before { content: 'file_download'; }
+.e-plus::before { content: 'add'; }
+.e-upload::before { content: 'upload'; }
+.e-download::before { content: 'download'; }
+.e-filter::before { content: 'filter_list'; }
+.e-grid::before { content: 'grid_view'; }
+.e-edit::before { content: 'edit'; }
+.e-close::before { content: 'close'; }
+.e-cpu::before { content: 'memory'; }
+.e-hard-drive::before { content: 'storage'; }
+.e-wifi::before { content: 'wifi'; }
+.e-activity::before { content: 'show_chart'; }
+.e-pin::before { content: 'push_pin'; }

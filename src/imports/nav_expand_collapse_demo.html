@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nav Expand / Collapse Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+
+  .demo-wrap { border: 0.5px solid #d1d5db; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; height: 400px; user-select: none; background: #fff; width: 100%; max-width: 700px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+  .demo-body { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { display: flex; flex-direction: column; background: #F9FAFB; border-right: 0.5px solid #e5e7eb; overflow: hidden; flex-shrink: 0; width: 180px; }
+
+  .logo-area { height: 48px; border-bottom: 0.5px solid #e5e7eb; flex-shrink: 0; display: flex; align-items: center; padding: 0 13px; gap: 10px; }
+  .logo-mark { width: 18px; height: 18px; border-radius: 4px; background: #c8ccd2; flex-shrink: 0; opacity: 0.8; }
+  .logo-placeholder { height: 10px; border-radius: 3px; background: #e5e7eb; width: 72px; transition: opacity 0.15s ease; }
+  .sidebar.collapsed .logo-placeholder { opacity: 0; }
+
+  .nav-items { flex: 1; padding: 8px 0; display: flex; flex-direction: column; }
+  .nav-item { display: flex; align-items: center; gap: 10px; height: 36px; cursor: pointer; position: relative; flex-shrink: 0; padding: 0 13px; }
+  .nav-item:hover { background: rgba(0,0,0,0.04); }
+  .nav-icon { width: 18px; height: 18px; border-radius: 4px; background: #c8ccd2; flex-shrink: 0; opacity: 0.7; }
+  .nav-placeholder { height: 10px; border-radius: 3px; background: #e5e7eb; flex: 1; transition: opacity 0.15s ease; }
+  .sidebar.collapsed .nav-placeholder { opacity: 0; }
+  .nav-divider { height: 0.5px; background: #e5e7eb; margin: 6px 13px; }
+
+  .nav-bottom { border-top: 0.5px solid #e5e7eb; padding: 4px 0; }
+  .toggle-btn { display: flex; align-items: center; justify-content: center; width: 44px; height: 36px; cursor: pointer; color: #9ca3af; }
+  .toggle-btn:hover { color: #6b7280; background: rgba(0,0,0,0.04); }
+  .toggle-btn svg { transition: transform 0.25s ease; }
+  .sidebar.collapsed .toggle-btn svg { transform: rotate(180deg); }
+
+  .tooltip { position: absolute; left: 46px; background: #1a1a1a; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 5px; white-space: nowrap; pointer-events: none; opacity: 0; z-index: 100; top: 50%; transform: translateY(-50%); }
+  .tooltip::before { content: ''; position: absolute; left: -4px; top: 50%; transform: translateY(-50%); border: 4px solid transparent; border-right-color: #1a1a1a; border-left: none; }
+  .sidebar.collapsed .nav-item:hover .tooltip { opacity: 1; }
+
+  .resizer { width: 5px; cursor: col-resize; background: transparent; flex-shrink: 0; transition: background 0.15s; }
+  .resizer:hover, .resizer.dragging { background: rgba(55,138,221,0.3); }
+  .workspace { flex: 1; background: #ffffff; display: flex; flex-direction: column; padding: 20px; gap: 12px; }
+  .ws-block { background: #e8eaed; border-radius: 4px; }
+
+  .hint-bar { display: flex; gap: 20px; padding: 9px 16px; border-top: 0.5px solid #e5e7eb; background: #fff; flex-wrap: wrap; }
+  .hint { font-size: 11px; color: #9ca3af; display: flex; align-items: center; gap: 5px; }
+  .hint-dot { width: 5px; height: 5px; border-radius: 50%; background: #c8ccd2; }
+</style>
+</head>
+<body>
+
+<div class="demo-wrap">
+  <div class="demo-body">
+    <div class="sidebar expanded" id="sidebar">
+
+      <div class="logo-area">
+        <div class="logo-mark"></div>
+        <div class="logo-placeholder"></div>
+      </div>
+
+      <div class="nav-items">
+        <div class="nav-item">
+          <div class="nav-icon"></div>
+          <div class="nav-placeholder" style="max-width:80px;"></div>
+          <div class="tooltip">Page 1</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon"></div>
+          <div class="nav-placeholder" style="max-width:64px;"></div>
+          <div class="tooltip">Page 2</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon"></div>
+          <div class="nav-placeholder" style="max-width:72px;"></div>
+          <div class="tooltip">Page 3</div>
+        </div>
+        <div class="nav-divider"></div>
+        <div class="nav-item">
+          <div class="nav-icon"></div>
+          <div class="nav-placeholder" style="max-width:56px;"></div>
+          <div class="tooltip">Page 4</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon"></div>
+          <div class="nav-placeholder" style="max-width:88px;"></div>
+          <div class="tooltip">Page 5</div>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon"></div>
+          <div class="nav-placeholder" style="max-width:68px;"></div>
+          <div class="tooltip">Page 6</div>
+        </div>
+      </div>
+
+      <div class="nav-bottom">
+        <div class="toggle-btn" onclick="toggleSidebar()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M9 2.5L4.5 7L9 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="resizer" id="resizer"></div>
+
+    <div class="workspace">
+      <div class="ws-block" style="height:12px;width:45%;"></div>
+      <div class="ws-block" style="height:10px;width:60%;"></div>
+      <div style="height:8px;"></div>
+      <div class="ws-block" style="height:10px;width:80%;"></div>
+      <div class="ws-block" style="height:10px;width:70%;"></div>
+      <div class="ws-block" style="height:10px;width:55%;"></div>
+    </div>
+  </div>
+
+  <div class="hint-bar">
+    <div class="hint"><div class="hint-dot"></div>Click chevron at bottom to toggle</div>
+    <div class="hint"><div class="hint-dot"></div>Drag divider — snaps at threshold</div>
+    <div class="hint"><div class="hint-dot"></div>Hover icons when collapsed to see label</div>
+  </div>
+</div>
+
+<script>
+const sidebar = document.getElementById('sidebar');
+const resizer = document.getElementById('resizer');
+const COLLAPSED_WIDTH = 44;
+const EXPANDED_WIDTH = 180;
+const SNAP_THRESHOLD = 120;
+let isExpanded = true;
+let isResizing = false;
+let startX, startWidth;
+let snapped = false;
+
+function setMode(expand, animate) {
+  isExpanded = expand;
+  sidebar.style.transition = animate ? 'width 0.22s cubic-bezier(0.4,0,0.2,1)' : 'none';
+  sidebar.style.width = (expand ? EXPANDED_WIDTH : COLLAPSED_WIDTH) + 'px';
+  sidebar.classList.toggle('collapsed', !expand);
+  sidebar.classList.toggle('expanded', expand);
+}
+
+function toggleSidebar() { setMode(!isExpanded, true); }
+
+resizer.addEventListener('mousedown', (e) => {
+  isResizing = true;
+  startX = e.clientX;
+  startWidth = sidebar.offsetWidth;
+  snapped = false;
+  resizer.classList.add('dragging');
+  document.body.style.cursor = 'col-resize';
+  sidebar.style.transition = 'none';
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', (e) => {
+  if (!isResizing) return;
+  const dx = e.clientX - startX;
+  const rawWidth = Math.max(COLLAPSED_WIDTH, Math.min(260, startWidth + dx));
+  if (!snapped && rawWidth < SNAP_THRESHOLD && isExpanded) {
+    snapped = true;
+    sidebar.style.transition = 'width 0.18s cubic-bezier(0.4,0,0.2,1)';
+    sidebar.style.width = COLLAPSED_WIDTH + 'px';
+    sidebar.classList.add('collapsed');
+    sidebar.classList.remove('expanded');
+    isExpanded = false;
+    return;
+  }
+  if (!snapped && rawWidth >= SNAP_THRESHOLD && !isExpanded) {
+    snapped = true;
+    sidebar.style.transition = 'width 0.18s cubic-bezier(0.4,0,0.2,1)';
+    sidebar.style.width = EXPANDED_WIDTH + 'px';
+    sidebar.classList.remove('collapsed');
+    sidebar.classList.add('expanded');
+    isExpanded = true;
+    return;
+  }
+  if (!snapped) {
+    sidebar.style.transition = 'none';
+    sidebar.style.width = rawWidth + 'px';
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (!isResizing) return;
+  isResizing = false;
+  snapped = false;
+  resizer.classList.remove('dragging');
+  document.body.style.cursor = '';
+  setMode(isExpanded, true);
+});
+</script>
+
+</body>
+</html>

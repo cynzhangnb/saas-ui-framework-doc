@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drilldown Nav Demo — Visibility Cloud</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f5f5f4;
+    --color-bg-info: #e6f1fb;
+    --color-text-primary: #1a1a18;
+    --color-text-secondary: #5f5e5a;
+    --color-text-tertiary: #888780;
+    --color-text-info: #185fa5;
+    --color-border-tertiary: rgba(0,0,0,0.1);
+    --color-border-secondary: rgba(0,0,0,0.18);
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-bg-primary: #1c1c1a;
+      --color-bg-secondary: #252523;
+      --color-bg-info: #0c447c22;
+      --color-text-primary: #f0ede8;
+      --color-text-secondary: #b4b2a9;
+      --color-text-tertiary: #888780;
+      --color-text-info: #85b7eb;
+      --color-border-tertiary: rgba(255,255,255,0.1);
+      --color-border-secondary: rgba(255,255,255,0.18);
+    }
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--color-bg-secondary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+  }
+
+  .demo-wrapper {
+    width: 100%;
+    max-width: 800px;
+  }
+
+  .demo-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-tertiary);
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+
+  .shell {
+    display: flex;
+    height: 460px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-bg-primary);
+  }
+
+  .nav-pane {
+    width: 220px;
+    min-width: 220px;
+    border-right: 0.5px solid var(--color-border-tertiary);
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-secondary);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-screen {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    transition: transform 200ms ease-out, opacity 200ms ease-out;
+  }
+
+  .nav-screen.hidden-right {
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .nav-screen.hidden-left {
+    transform: translateX(-30%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .nav-header {
+    padding: 14px 14px 10px;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    flex-shrink: 0;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+  }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    flex-shrink: 0;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    width: 100%;
+    text-align: left;
+    transition: background 120ms;
+    border-radius: 0;
+    font-family: var(--font-sans);
+  }
+  .back-btn:hover { background: var(--color-bg-primary); }
+
+  .nav-section-label {
+    padding: 14px 14px 6px;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: background 120ms;
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--color-bg-primary); }
+  .nav-item.active {
+    background: var(--color-bg-info);
+    color: var(--color-text-info);
+    font-weight: 500;
+  }
+  .nav-item .chevron {
+    font-size: 14px;
+    color: var(--color-text-tertiary);
+  }
+  .nav-item.active .chevron { color: var(--color-text-info); }
+
+  .nav-divider {
+    height: 0.5px;
+    background: var(--color-border-tertiary);
+    margin: 6px 0;
+    flex-shrink: 0;
+  }
+
+  .nav-item-icon {
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .icon-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--color-text-tertiary);
+    flex-shrink: 0;
+  }
+  .nav-item.active .icon-dot { background: var(--color-text-info); }
+
+  .nav-scroll { overflow-y: auto; flex: 1; }
+
+  .workspace {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--color-bg-primary);
+    padding: 24px;
+  }
+
+  .workspace-label {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+  }
+
+  .workspace-sub {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+  }
+
+  .placeholder-lines {
+    margin-top: 24px;
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .placeholder-line {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--color-border-tertiary);
+  }
+
+  .legend {
+    margin-top: 16px;
+    display: flex;
+    gap: 20px;
+    font-size: 11px;
+    color: var(--color-text-tertiary);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--color-text-tertiary);
+  }
+  .legend-chevron { font-size: 12px; color: var(--color-text-tertiary); }
+</style>
+</head>
+<body>
+<div class="demo-wrapper">
+  <div class="demo-label">Nav pattern · Drilldown (Jira-style)</div>
+
+  <div class="shell">
+    <div class="nav-pane">
+
+      <div class="nav-screen" id="screen-main">
+        <div class="nav-header">Visibility Cloud</div>
+        <div class="nav-scroll">
+          <div class="nav-item active" onclick="openWorkspace('Dashboard', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Dashboard</div>
+          </div>
+          <div class="nav-item" onclick="drilldown('map', this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Map</div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('Network Canvas', 'Opens with AI pane docked', this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Network</div>
+          </div>
+          <div class="nav-divider"></div>
+          <div class="nav-section-label">Monitoring</div>
+          <div class="nav-item" onclick="drilldown('inventory', this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Inventory</div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('Reports', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Reports</div>
+          </div>
+          <div class="nav-item" onclick="drilldown('alerts', this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Alerts</div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="nav-divider"></div>
+          <div class="nav-section-label">Tools</div>
+          <div class="nav-item" onclick="openWorkspace('AI Assist', 'Opens with AI chat pane docked', this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>AI Assist</div>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('Settings', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Settings</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-screen hidden-right" id="screen-map">
+        <button class="back-btn" onclick="goBack()">‹ &nbsp;Main menu</button>
+        <div class="nav-section-label">Map</div>
+        <div class="nav-scroll">
+          <div class="nav-item" onclick="openWorkspace('HQ Topology', 'Map loaded', this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>HQ Topology</div>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('Branch East', 'Map loaded', this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Branch East</div>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('Branch West', 'Map loaded', this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Branch West</div>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('DC Core', 'Map loaded', this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>DC Core</div>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('WAN Overview', 'Map loaded', this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>WAN Overview</div>
+          </div>
+          <div class="nav-divider"></div>
+          <div class="nav-section-label">Shared</div>
+          <div class="nav-item" onclick="openWorkspace('Team Maps', 'Map loaded', this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Team Maps</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-screen hidden-right" id="screen-inventory">
+        <button class="back-btn" onclick="goBack()">‹ &nbsp;Main menu</button>
+        <div class="nav-section-label">Inventory</div>
+        <div class="nav-scroll">
+          <div class="nav-item" onclick="openWorkspace('All Devices', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>All Devices</div>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('Routers', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Routers</div>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('Switches', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Switches</div>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('Firewalls', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Firewalls</div>
+          </div>
+          <div class="nav-divider"></div>
+          <div class="nav-item" onclick="openWorkspace('VLANs', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>VLANs</div>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('Subnets', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Subnets</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-screen hidden-right" id="screen-alerts">
+        <button class="back-btn" onclick="goBack()">‹ &nbsp;Main menu</button>
+        <div class="nav-section-label">Alerts</div>
+        <div class="nav-scroll">
+          <div class="nav-item" onclick="openWorkspace('Active Alerts', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Active</div>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('Alert History', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>History</div>
+          </div>
+          <div class="nav-item" onclick="openWorkspace('Alert Rules', null, this)">
+            <div class="nav-item-icon"><div class="icon-dot"></div>Rules</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="workspace">
+      <div class="workspace-label" id="ws-title">Dashboard</div>
+      <div class="workspace-sub" id="ws-sub">Click a nav item to navigate</div>
+      <div class="placeholder-lines">
+        <div class="placeholder-line" style="width:100%"></div>
+        <div class="placeholder-line" style="width:80%"></div>
+        <div class="placeholder-line" style="width:90%"></div>
+        <div class="placeholder-line" style="width:60%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot"></span>Direct page — no drilldown</div>
+    <div class="legend-item"><span class="legend-chevron">›</span>Has children — drilldown nav</div>
+  </div>
+</div>
+
+<script>
+let currentScreen = 'main';
+
+function drilldown(section) {
+  const main = document.getElementById('screen-main');
+  const target = document.getElementById('screen-' + section);
+  main.classList.add('hidden-left');
+  main.classList.remove('hidden-right');
+  target.classList.remove('hidden-right');
+  target.classList.remove('hidden-left');
+  currentScreen = section;
+  document.getElementById('ws-title').textContent = section.charAt(0).toUpperCase() + section.slice(1);
+  document.getElementById('ws-sub').textContent = '← Select an item from the left panel';
+}
+
+function goBack() {
+  const main = document.getElementById('screen-main');
+  const current = document.getElementById('screen-' + currentScreen);
+  current.classList.add('hidden-right');
+  main.classList.remove('hidden-left');
+  main.classList.remove('hidden-right');
+  currentScreen = 'main';
+}
+
+function openWorkspace(title, sub, el) {
+  document.getElementById('ws-title').textContent = title;
+  document.getElementById('ws-sub').textContent = sub || 'Page loaded';
+  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  if (el) el.classList.add('active');
+}
+</script>
+</body>
+</html>
