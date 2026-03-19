@@ -77,7 +77,7 @@ export function AI() {
           <div className="mt-[0px] mb-[24px]">
             <div className="w-[82%]">
               <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                2. Contextual AI <span className="font-normal text-gray-500">— AI Assist</span>
+                2. Contextual AI <span className="font-normal text-gray-500">— AI Copilot</span>
               </h3>
               <p className="text-sm text-gray-700 mb-5">
                 Used when user is already within a specific page or workflow. It's used for explaining current data, summarizing findings, next-step guidance.
