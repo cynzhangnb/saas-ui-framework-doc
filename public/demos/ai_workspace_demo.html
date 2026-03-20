@@ -58,7 +58,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 /* Shared AI input box style */
 .ai-box{width:100%;max-width:500px;border:1.5px solid #378ADD;border-radius:10px;background:#fff;overflow:hidden;box-shadow:0 2px 12px rgba(55,138,221,0.08);}
-.ai-box-input{width:100%;padding:14px 16px 10px;border:none;outline:none;font-size:13px;color:#222;resize:none;font-family:inherit;background:transparent;min-height:52px;}
+.ai-box-input{width:100%;padding:14px 16px 10px;border:none;outline:none;font-size:13px;color:#222;resize:none;font-family:inherit;background:transparent;min-height:52px;overflow:hidden;}
 .ai-box-input::placeholder{color:#bbb;}
 .ai-box-footer{display:flex;align-items:center;padding:8px 12px;}
 .ai-send{width:28px;height:28px;border-radius:6px;border:1px solid #d8d8d8;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:auto;color:#888;flex-shrink:0;}
@@ -100,7 +100,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .cinput-bar{padding:16px 24px;border-top:1px solid #f0f0f0;flex-shrink:0;display:flex;justify-content:center;}
 .cinput-inner{width:100%;max-width:680px;}
 .cinput-box{border:1.5px solid #378ADD;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 2px 12px rgba(55,138,221,0.08);}
-.cinput-main{width:100%;padding:14px 16px 10px;border:none;outline:none;font-size:13px;color:#222;font-family:inherit;resize:none;background:transparent;min-height:52px;}
+.cinput-main{width:100%;padding:14px 16px 10px;border:none;outline:none;font-size:13px;color:#222;font-family:inherit;resize:none;background:transparent;min-height:52px;overflow:hidden;}
 .cinput-main::placeholder{color:#bbb;}
 .cinput-ftr{display:flex;align-items:center;padding:8px 12px;}
 .csend{width:28px;height:28px;border-radius:6px;border:1px solid #d8d8d8;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:auto;color:#888;}
@@ -225,7 +225,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <div class="estate-title">AI Workspace</div>
           <div class="estate-sub">Ask, explore, and troubleshoot your network.</div>
           <div class="ai-box">
-            <textarea class="ai-box-input" placeholder="Do anything with AI..." id="main-input" rows="2" onkeydown="handleMainEnter(event)"></textarea>
+            <textarea class="ai-box-input" placeholder="Do anything with AI..." id="main-input" rows="2" onkeydown="handleMainEnter(event)" oninput="autoResize(this)"></textarea>
             <div class="ai-box-footer">
               <div class="ai-send" onclick="runStep1()">
                 <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 6L2 2V5.5L8 6L2 6.5V10Z" fill="currentColor"/></svg>
@@ -234,7 +234,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           </div>
           <div style="height:16px;"></div>
           <div class="shortcuts">
-            <div class="sc-pill" onclick="runStep1()">Explore Network</div>
+            <div class="sc-pill" onclick="fillExplorePrompt()">Explore Network</div>
             <div class="sc-pill">Create intent</div>
             <div class="sc-pill">Discover devices</div>
             <div class="sc-pill">Troubleshoot issue</div>
@@ -248,7 +248,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div class="cinput-bar" id="cinput-bar" style="display:none;">
           <div class="cinput-inner">
             <div class="cinput-box">
-              <textarea class="cinput-main" placeholder="Ask anything about your network, or specify a task..." id="cinput" rows="2" onkeydown="handleChatEnter(event)"></textarea>
+              <textarea class="cinput-main" placeholder="Ask anything about your network, or specify a task..." id="cinput" rows="2" onkeydown="handleChatEnter(event)" oninput="autoResize(this)"></textarea>
               <div class="cinput-ftr">
                 <div class="csend" onclick="sendChat()">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 6L2 2V5.5L8 6L2 6.5V10Z" fill="currentColor"/></svg>
@@ -302,6 +302,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <script>
 let step=0;
 const e=id=>document.getElementById(id);
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=el.scrollHeight+'px';
+}
 
 const NODES=[
   {id:'cr1',label:'Core Router 1', ip:'10.0.0.1', px:33, py:14},
@@ -410,11 +415,18 @@ function addMsg(html, type='ai'){
 
 function delay(fn,ms){return new Promise(r=>setTimeout(()=>{fn();r();},ms));}
 
+function fillExplorePrompt(){
+  const inp=e('main-input');
+  inp.value='Explore my network.\nFocus on: overall topology and key segments\nScope: [Entire network / a site / a region]\nShow: major connections and device groups';
+  autoResize(inp);
+  inp.focus();
+}
+
 async function runStep1(){
   if(step>0)return;
   step=1;
   showChatMode();
-  addMsg(`<div class="ububble">Show me Boston data center</div>`,'user');
+  addMsg(`<div class="ububble">Explore my network.<br>Focus on: overall topology and key segments<br>Scope: Boston data center<br>Show: major connections and device groups</div>`,'user');
   await delay(()=>{
     addMsg(`
       <div class="arow">
@@ -535,8 +547,8 @@ function resetDemo(){
   e('cmsgs').innerHTML='';
   e('cinput-bar').style.display='none';
   closeRight();
-  e('main-input').value='';
-  if(e('cinput'))e('cinput').value='';
+  const mi=e('main-input'); mi.value=''; mi.style.height='';
+  const ci=e('cinput'); if(ci){ci.value=''; ci.style.height='';}
 }
 </script>
 </body>
